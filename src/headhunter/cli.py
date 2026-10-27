@@ -5,8 +5,9 @@
     headhunter role <name> <FOH|STAGE>  Mark a paired console as FOH or stage
     headhunter dante                  Show what each paired console receives over Dante
     headhunter names [--write]        Name Dante sources on FOH consoles (dry run without --write)
-    headhunter buttons <name> --gain N [--phantom N]  Choose a FOH console's GPIO buttons
+    headhunter buttons <name> --gain C [--phantom D]  Choose a FOH console's GPIO buttons
     headhunter rename <name> [--name NEW] [--dante NEW]  Change a console's Headhunter or Dante name
+    headhunter settings [<setting> <value>]  Show or change Headhunter's settings
     headhunter run [--write-names] [--write-gain]  Keep running: keep names up to date, and run gain mode
 """
 
@@ -16,6 +17,7 @@ import contextlib
 import logging
 
 from headhunter import __version__
+from headhunter.buttons import gpio_name, gpio_number
 from headhunter.dante import NetaudioError, read_subscriptions
 from headhunter.discovery import discover_all
 from headhunter.engine import run as run_engine
@@ -83,11 +85,13 @@ def buttons(args: argparse.Namespace) -> None:
         if pairing is None:
             raise SystemExit(f"No paired console called {args.display_name!r}")
         try:
-            store.set_buttons(pairing.console_mac, args.gain, args.phantom)
+            gain = gpio_number(args.gain)
+            phantom = gpio_number(args.phantom) if args.phantom else None
+            store.set_buttons(pairing.console_mac, gain, phantom)
         except ValueError as error:
             raise SystemExit(str(error)) from None
-    phantom = f", phantom power on GPIO {args.phantom}" if args.phantom else ""
-    print(f"{pairing.display_name}: gain mode on GPIO {args.gain}{phantom}.")
+    phantom_text = f", phantom power on GPIO {gpio_name(phantom)}" if phantom else ""
+    print(f"{pairing.display_name}: gain mode on GPIO {gpio_name(gain)}{phantom_text}.")
     if not pairing.is_foh:
         print(f"Note that {pairing.display_name} is not marked FOH, so its buttons will not be used.")
 
@@ -133,7 +137,7 @@ def rename(args: argparse.Namespace) -> None:
             except ValueError as error:
                 raise SystemExit(str(error)) from None
             new = store.by_console_mac(pairing.console_mac).display_name
-        print(f"{pairing.display_name} is now called {new} in Headhunter. Restart 'headhunter run' to use the new name.")
+        print(f"{pairing.display_name} is now called {new} in Headhunter.")
 
 
 def _ranges(numbers: list[int]) -> str:
@@ -150,6 +154,24 @@ def _ranges(numbers: list[int]) -> str:
 
 def names(args: argparse.Namespace) -> None:
     asyncio.run(run_naming(args.write))
+
+
+def settings(args: argparse.Namespace) -> None:
+    from headhunter.store import SETTING_PARSERS
+
+    with Store() as store:
+        if args.setting is not None:
+            if args.value is None:
+                raise SystemExit("Give a value too, e.g.: headhunter settings write_gain on")
+            try:
+                store.set_setting(args.setting.replace("-", "_"), args.value)
+            except ValueError as error:
+                raise SystemExit(str(error)) from None
+        current = store.settings()
+    for name in SETTING_PARSERS:
+        value = getattr(current, name)
+        shown = ("on" if value else "off") if isinstance(value, bool) else f"{value:g}" if isinstance(value, float) else value
+        print(f"  {name:<14} {shown}")
 
 
 def run(args: argparse.Namespace) -> None:
@@ -181,8 +203,8 @@ def main() -> None:
 
     buttons_parser = commands.add_parser("buttons", help="Choose a FOH console's gain mode and phantom power GPIOs")
     buttons_parser.add_argument("display_name", help="The FOH console's display name, e.g. COMPACT")
-    buttons_parser.add_argument("--gain", type=int, required=True, metavar="GPIO", help="GPIO for the gain mode button, 1 to 4")
-    buttons_parser.add_argument("--phantom", type=int, metavar="GPIO", help="GPIO for the phantom power button, 1 to 4")
+    buttons_parser.add_argument("--gain", required=True, metavar="GPIO", help="GPIO for the gain mode button, A to D")
+    buttons_parser.add_argument("--phantom", metavar="GPIO", help="GPIO for the phantom power button, A to D")
     buttons_parser.set_defaults(func=buttons)
 
     rename_parser = commands.add_parser("rename", help="Change a console's Headhunter name or Dante name")
@@ -191,11 +213,16 @@ def main() -> None:
     rename_parser.add_argument("--dante", metavar="NEW", help="New Dante device name; subscriptions to it are moved over")
     rename_parser.set_defaults(func=rename)
 
+    settings_parser = commands.add_parser("settings", help="Show or change Headhunter's settings")
+    settings_parser.add_argument("setting", nargs="?", help="Setting to change, e.g. write_gain")
+    settings_parser.add_argument("value", nargs="?", help="New value, e.g. on")
+    settings_parser.set_defaults(func=settings)
+
     run_parser = commands.add_parser("run", help="Keep running, and keep names up to date as things change")
-    run_parser.add_argument("--write-names", action="store_true", help="Write names (without this, only report them)")
-    run_parser.add_argument("--write-gain", action="store_true", help="Change preamp gain and restore trim in gain mode (without this, only report it)")
-    run_parser.add_argument("--stats", type=float, metavar="MINUTES", help="Log memory and resource use every few minutes, to spot leaks")
-    run_parser.add_argument("--restore-after", type=float, metavar="SECONDS", help="How long trim must be still before it is restored (default 2)")
+    run_parser.add_argument("--write-names", action="store_const", const=True, help="Write names, whatever the write_names setting says")
+    run_parser.add_argument("--write-gain", action="store_const", const=True, help="Change gain, whatever the write_gain setting says")
+    run_parser.add_argument("--stats", type=float, metavar="MINUTES", help="Log memory and resource use every few minutes")
+    run_parser.add_argument("--restore-after", type=float, metavar="SECONDS", help="How long trim must be still before it is restored")
     run_parser.set_defaults(func=run)
 
     args = parser.parse_args()

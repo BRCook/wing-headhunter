@@ -27,13 +27,15 @@ from headhunter.buttons import flash
 from headhunter.dante import NetaudioError, Subscription, read_subscriptions
 from headhunter.naming import PlannedName, apply_names, paths_for, plan_from_state
 from headhunter.native import NATIVE_PORT, DefinitionRecord, NativeClient, Value, wing_hash
-from headhunter.store import Pairing, Store
+from headhunter.store import Pairing, Settings, Store
 
 log = logging.getLogger(__name__)
 
 RETRY_SECONDS = 5.0  # Between attempts to find or reconnect to a console
 READ_BATCH = 100  # Parameters read at once when a console connects
 READ_TIMEOUT, SLOW_READ_TIMEOUT = 2.0, 5.0  # A second, slower try for anything that did not answer
+CONFIG_POLL_SECONDS = 2.0  # How often to check the database for configuration changes
+RENAMES_LOGGED_SEPARATELY = 4  # More renames than this at once are summed up in one line
 DANTE_POLL_SECONDS = 5.0
 SETTLE_SECONDS = 0.5  # Wait for a burst of changes to finish before recalculating
 FOLLOW_SECONDS = 0.1  # Same, for following the selected channel
@@ -162,33 +164,38 @@ class Engine:
         ports: dict[str, int] | None = None,
         write_gain: bool = False,
         restore_after: float | None = None,
+        overrides: set[str] | None = None,
+        store_path=None,
     ) -> None:
-        self.pairings = pairings
+        """overrides names settings given on the command line, which configuration changes leave alone.
+        With store_path, the database there is watched, and configuration changes applied while running."""
+        self.pairings = list(pairings)
         self.write_names = write_names
         self.write_gain = write_gain
         self.restore_after = RESTORE_SECONDS if restore_after is None else restore_after
-        ports = ports or {}
-        self.links = {
-            p.console_mac: ConsoleLink(p, self._paths(p), self._changed, ports.get(p.console_mac, NATIVE_PORT))
-            for p in pairings
-        }
+        self._overrides = overrides or set()
+        self._store_path = store_path
+        self._ports = ports or {}
+        self._running = False
+        self.links: dict[str, ConsoleLink] = {}
+        self._link_tasks: dict[str, asyncio.Task] = {}
         self.subscriptions: list[Subscription] = []
         self._dirty = asyncio.Event()
         self._reported: dict[tuple[str, int], tuple[str, str, tuple[str, ...]]] = {}
         self._summaries: dict[str, str] = {}
         # Gain mode, per FOH console. Always off at startup (see the README's Startup section)
-        self.gain_mode: dict[str, bool] = {p.console_mac: False for p in pairings if p.is_foh}
+        self.gain_mode: dict[str, bool] = {}
         self._connected_before: set[str] = set()
         self.targets: dict[str, gain.Target | None] = {}
         self._follow_dirty = asyncio.Event()
         self._described: dict[str, str] = {}
         self._definitions: dict[tuple, DefinitionRecord] = {}
-        self._accumulators = {p.console_mac: gain.Accumulator() for p in pairings if p.is_foh}
+        self._accumulators: dict[str, gain.Accumulator] = {}
         # Work for the gain worker, in order: ("trim", foh, strip, delta) or ("restore", foh, strip, None)
         self._work: asyncio.Queue[tuple[str, Pairing, gain.Strip, float | None]] = asyncio.Queue()
         self._dry_gains: dict[tuple[str, str], float] = {}  # What gain would be, in dry-run mode
         # Trim snapshots, per FOH console: what each strip's trim is put back to
-        self._snapshots: dict[str, dict[str, float]] = {p.console_mac: {} for p in pairings if p.is_foh}
+        self._snapshots: dict[str, dict[str, float]] = {}
         # The strip being adjusted on each FOH console, and its restore timer
         self._adjusting: dict[str, gain.Strip] = {}
         self._restore_timers: dict[str, asyncio.TimerHandle] = {}
@@ -196,11 +203,109 @@ class Engine:
         self._phantom_holds: dict[str, asyncio.TimerHandle] = {}
         self._flashes: set[asyncio.Task] = set()
         # Strip light flashes on a console take turns, so one never saves another's colours as the real ones
-        self._light_locks: dict[str, asyncio.Lock] = {p.console_mac: asyncio.Lock() for p in pairings if p.is_foh}
+        self._light_locks: dict[str, asyncio.Lock] = {}
 
         # Gain displays on scribble strips: per FOH console, name path -> (real name, text shown, real icon)
-        self._shown: dict[str, dict[str, tuple[Value, str, Value]]] = {p.console_mac: {} for p in pairings if p.is_foh}
+        self._shown: dict[str, dict[str, tuple[Value, str, Value]]] = {}
         self._display_timers: dict[tuple[str, str], asyncio.TimerHandle] = {}
+        for pairing in self.pairings:
+            self._add(pairing)
+
+    # --- Configuration --------------------------------------------------------------------------
+
+    def _add(self, pairing: Pairing) -> None:
+        """Start looking after a console."""
+        mac = pairing.console_mac
+        self.links[mac] = ConsoleLink(pairing, self._paths(pairing), self._changed, self._ports.get(mac, NATIVE_PORT))
+        if pairing.is_foh:
+            self.gain_mode.setdefault(mac, False)
+            self._accumulators.setdefault(mac, gain.Accumulator())
+            self._snapshots.setdefault(mac, {})
+            self._light_locks.setdefault(mac, asyncio.Lock())
+            self._shown.setdefault(mac, {})
+        if self._running:
+            self._link_tasks[mac] = asyncio.create_task(self.links[mac].run(), name=f"link {pairing.display_name}")
+
+    async def _drop(self, mac: str) -> None:
+        """Stop looking after a console."""
+        task = self._link_tasks.pop(mac, None)
+        if task is not None:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+        self.links.pop(mac, None)
+
+    async def reconfigure(self, pairings: list[Pairing], settings: Settings | None = None) -> None:
+        """Apply new configuration while running.
+
+        A console whose configuration changes is treated like gain mode being turned off:
+        anything in progress on it is stopped. A console that changes role is reconnected,
+        since Headhunter watches different things on FOH and stage consoles.
+        """
+        old = {p.console_mac: p for p in self.pairings}
+        new = {p.console_mac: p for p in pairings}
+        for mac, before in old.items():
+            after = new.get(mac)
+            if after == before:
+                continue
+            if before.is_foh and self.links.get(mac) is not None:
+                self._stop_gain_mode(before)
+            if after is None:
+                await self._drop(mac)
+                log.info("%s is no longer paired", before.display_name)
+            elif (after.role, after.console_model) != (before.role, before.console_model):
+                await self._drop(mac)
+                self._add(after)
+                log.info("%s is now %s; reconnecting", after.display_name, after.role)
+            else:
+                self.links[mac].pairing = after
+                log.info("%s: configuration changed", after.display_name)
+        for mac, after in new.items():
+            if mac not in old:
+                self._add(after)
+                log.info("%s paired", after.display_name)
+        self.pairings = list(pairings)
+        if settings is not None:
+            self._apply_settings(settings)
+        self._changed()
+
+    def _apply_settings(self, settings: Settings) -> None:
+        for name in ("write_names", "write_gain", "restore_after"):
+            value = getattr(settings, name)
+            if name in self._overrides or getattr(self, name) == value:
+                continue
+            setattr(self, name, value)
+            log.info("Setting %s is now %s", name, value)
+            if name == "write_gain":
+                for pairing in self.pairings:
+                    if pairing.is_foh:
+                        self._stop_gain_mode(pairing)
+
+    def _stop_gain_mode(self, foh: Pairing) -> None:
+        """Turn gain mode off on a console, as if its button had been pressed."""
+        mac = foh.console_mac
+        if not self.gain_mode.get(mac):
+            return
+        self.gain_mode[mac] = False
+        self._accumulators[mac].reset()
+        self._restore_now(foh)
+        self._cancel_phantom_hold(foh)
+        self._unshow_all(foh)
+        log.info("%s: gain mode off", foh.display_name)
+
+    async def _watch_config(self) -> None:
+        """Apply configuration changes made elsewhere, such as from another headhunter command."""
+        with Store(self._store_path) as store:
+            version = store.data_version()
+            while True:
+                await asyncio.sleep(CONFIG_POLL_SECONDS)
+                try:
+                    current = store.data_version()
+                    if current != version:
+                        version = current
+                        await self.reconfigure(store.pairings(), store.settings())
+                except Exception:
+                    log.exception("Error applying configuration changes")
 
     @staticmethod
     def _paths(pairing: Pairing) -> list[str]:
@@ -337,12 +442,7 @@ class Engine:
         elif old and not new:
             if not self.gain_mode[foh.console_mac]:
                 return  # The button was on at startup, so gain mode was never on: nothing has changed
-            self.gain_mode[foh.console_mac] = False
-            self._accumulators[foh.console_mac].reset()
-            self._restore_now(foh)  # An adjustment in progress is cancelled, and trim restored
-            self._cancel_phantom_hold(foh)
-            self._unshow_all(foh)
-            log.info("%s: gain mode off", foh.display_name)
+            self._stop_gain_mode(foh)  # An adjustment in progress is cancelled, and trim restored
             if self.write_gain:
                 self._start_flash(self._flash_layer(foh))
 
@@ -373,10 +473,13 @@ class Engine:
     async def run(self) -> None:
         if not any(p.is_foh for p in self.pairings):
             log.warning("No console is marked FOH, so no sources will be named")
-        tasks = [asyncio.create_task(link.run(), name=f"link {link.name}") for link in self.links.values()]
+        self._running = True
+        for mac, link in self.links.items():
+            self._link_tasks[mac] = asyncio.create_task(link.run(), name=f"link {link.name}")
+        tasks = []
         for pairing in self.pairings:
             if pairing.is_foh and pairing.gain_gpio is None:
-                log.warning("%s has no gain mode button; choose one with: headhunter buttons %s --gain <1-4>",
+                log.warning("%s has no gain mode button; choose one with: headhunter buttons %s --gain <A-D>",
                             pairing.display_name, pairing.display_name)
         tasks += [
             asyncio.create_task(self._poll_dante(), name="dante"),
@@ -384,6 +487,8 @@ class Engine:
             asyncio.create_task(self._following(), name="following"),
             asyncio.create_task(self._gain_worker(), name="gain"),
         ]
+        if self._store_path is not None:
+            tasks.append(asyncio.create_task(self._watch_config(), name="configuration"))
         try:
             # Waiting this way, rather than with gather(), means stopping Headhunter does not
             # cancel the console connections before the finally block has used them
@@ -396,8 +501,9 @@ class Engine:
                 if pairing.is_foh:
                     with contextlib.suppress(ConnectionError, TimeoutError):
                         await self._unshow_now(pairing)
-            for task in tasks:
+            for task in [*tasks, *self._link_tasks.values()]:
                 task.cancel()
+            self._running = False
             for task in tasks:
                 with contextlib.suppress(asyncio.CancelledError):
                     await task
@@ -447,13 +553,19 @@ class Engine:
         except (ConnectionError, TimeoutError) as error:
             log.warning("Could not write names: %s", error or type(error).__name__)
             return
-        for plan in to_write:
-            if plan not in failed:
-                # The console never reports our own writes back, so update the mirror ourselves
-                self.links[plan.console.console_mac].state[f"io.in.MOD.{plan.dante_input}.name"] = plan.planned
-                log.info("%s MOD %d: %r -> %r", plan.console.display_name, plan.dante_input, plan.current, plan.planned)
-            else:
-                log.warning("%s MOD %d: wanted %r, reads back differently", plan.console.display_name, plan.dante_input, plan.planned)
+        written = [plan for plan in to_write if plan not in failed]
+        for plan in written:
+            # The console never reports our own writes back, so update the mirror ourselves
+            self.links[plan.console.console_mac].state[f"io.in.MOD.{plan.dante_input}.name"] = plan.planned
+        for console in {plan.console.console_mac: plan.console for plan in written}.values():
+            mine = [plan for plan in written if plan.console is console]
+            if len(mine) > RENAMES_LOGGED_SEPARATELY:
+                log.info("%s: renamed %d Dante inputs", console.display_name, len(mine))
+                continue
+            for plan in mine:
+                log.info("%s MOD %d: %r -> %r", console.display_name, plan.dante_input, plan.current, plan.planned)
+        for plan in failed:
+            log.warning("%s MOD %d: wanted %r, reads back differently", plan.console.display_name, plan.dante_input, plan.planned)
         self._changed()  # Recalculate, so the summary reflects what is now on the console
 
     async def _gain_worker(self) -> None:
@@ -851,18 +963,29 @@ class Engine:
 
 
 async def run(
-    write_names: bool,
-    write_gain: bool = False,
+    write_names: bool | None = None,
+    write_gain: bool | None = None,
     restore_after: float | None = None,
     stats_minutes: float | None = None,
 ) -> None:
+    """Run Headhunter. Settings come from the database; any given here override them for this run."""
     with Store() as store:
         pairings = store.pairings()
+        settings = store.settings()
+        path = store.path
     if not pairings:
         raise SystemExit("No consoles are paired yet; run 'headhunter pair' first.")
+    given = {"write_names": write_names, "write_gain": write_gain, "restore_after": restore_after,
+             "stats_minutes": stats_minutes}
+    overrides = {name for name, value in given.items() if value is not None}
+    value = {name: given[name] if name in overrides else getattr(settings, name) for name in given}
     log.info("Starting with %d paired consoles; names will %sbe written; gain will %sbe changed",
-             len(pairings), "" if write_names else "not ", "" if write_gain else "not ")
-    engine = Engine(pairings, write_names, write_gain=write_gain, restore_after=restore_after)
+             len(pairings), "" if value["write_names"] else "not ", "" if value["write_gain"] else "not ")
+    engine = Engine(
+        pairings, value["write_names"], write_gain=value["write_gain"], restore_after=value["restore_after"],
+        overrides=overrides, store_path=path,
+    )
+    stats_minutes = value["stats_minutes"]
     if not stats_minutes:
         await engine.run()
         return

@@ -8,6 +8,22 @@ import asyncio
 
 from headhunter.native import NativeClient
 
+# GPIOs are numbered 1-4 in the protocol, but named A-D on the console
+GPIO_NAMES = "ABCD"
+
+
+def gpio_name(number: int) -> str:
+    return GPIO_NAMES[number - 1]
+
+
+def gpio_number(name: str) -> int:
+    """A GPIO's number from its console name, A to D (case does not matter)."""
+    text = name.strip().upper()
+    if len(text) != 1 or text not in GPIO_NAMES:
+        raise ValueError(f"GPIOs are named {', '.join(GPIO_NAMES)}")
+    return GPIO_NAMES.index(text) + 1
+
+
 # (seconds dark, seconds lit) for each flash. Each flash starts dark, because
 # the button is already lit under the user's finger; the pattern always ends dark.
 FLASH_PATTERNS = {

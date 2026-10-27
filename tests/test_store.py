@@ -145,3 +145,32 @@ def test_version_3_databases_are_upgraded(tmp_path):
         assert store.by_display_name("rack").display_name == "RACK"
         with pytest.raises(ValueError):
             store.add(COMPACT, COMPACT_CARD, "Rack")
+
+
+def test_settings_default_and_change(store):
+    from headhunter.store import Settings
+
+    assert store.settings() == Settings()
+    store.set_setting("write_gain", "on")
+    store.set_setting("restore_after", "1.5")
+    store.set_setting("web_port", "9000")
+    settings = store.settings()
+    assert (settings.write_gain, settings.restore_after, settings.web_port) == (True, 1.5, 9000)
+
+
+@pytest.mark.parametrize(
+    "key, text",
+    [("write_gain", "maybe"), ("restore_after", "0"), ("restore_after", "abc"), ("web_port", "80"), ("colour", "red")],
+)
+def test_bad_settings_are_refused(store, key, text):
+    with pytest.raises(ValueError):
+        store.set_setting(key, text)
+
+
+def test_changes_from_elsewhere_are_noticed(tmp_path):
+    path = tmp_path / "headhunter.db"
+    with Store(path) as watcher, Store(path) as other:
+        before = watcher.data_version()
+        other.set_setting("write_names", "on")
+        assert watcher.data_version() != before
+        assert watcher.settings().write_names

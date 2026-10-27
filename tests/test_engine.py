@@ -928,3 +928,163 @@ def test_a_value_headhunter_does_not_understand_does_not_stop_it(network):
             await compact.stop()
 
     asyncio.run(scenario())
+
+
+def test_consoles_can_be_paired_and_unpaired_while_running(network):
+    async def scenario():
+        rack = FakeWing({**defaults(RACK), "io.out.MOD.1.grp": "LCL", "io.out.MOD.1.in": 24})
+        compact = FakeWing(defaults(COMPACT))
+        await rack.start()
+        await compact.start()
+        ports = {"rack-mac": rack.port, "compact-mac": compact.port}
+        running = engine.Engine([COMPACT], write_names=True, ports=ports)  # The Rack is not paired yet
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: running.links["compact-mac"].connected)
+            await running.reconfigure([RACK, COMPACT])
+            await wait_for(lambda: compact.values["io.in.MOD.1.name"] == "RACK-L24-HH")
+
+            await running.reconfigure([COMPACT])
+            assert "rack-mac" not in running.links
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())
+
+
+def test_changing_a_foh_consoles_buttons_turns_gain_mode_off(network):
+    foh = Pairing(**{**COMPACT.__dict__, "gain_gpio": 3})
+
+    async def scenario():
+        rack, compact = stage_box_setup(foh)
+        await rack.start()
+        await compact.start()
+        running = engine.Engine(
+            [RACK, foh], ports={"rack-mac": rack.port, "compact-mac": compact.port}, write_gain=True, restore_after=30
+        )
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: (t := running.targets.get("compact-mac")) and t.preamp is not None)
+            compact.push("$ctl.gpio.3.gpstate", 1)
+            await wait_for(lambda: running.gain_mode["compact-mac"])
+            compact.push("ch.13.in.set.trim", 3.0)  # An adjustment in progress
+            await wait_for(lambda: "compact-mac" in running._adjusting)
+
+            moved = Pairing(**{**foh.__dict__, "gain_gpio": 1})
+            await running.reconfigure([RACK, moved])
+            assert not running.gain_mode["compact-mac"]
+            await wait_for(lambda: compact.values["ch.13.in.set.trim"] == 2.0)  # Restored straight away
+
+            # The new button works; the old one does nothing
+            compact.push("$ctl.gpio.3.gpstate", 0)
+            compact.push("$ctl.gpio.3.gpstate", 1)
+            await asyncio.sleep(0.3)
+            assert not running.gain_mode["compact-mac"]
+            compact.push("$ctl.gpio.1.gpstate", 1)
+            await wait_for(lambda: running.gain_mode["compact-mac"])
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())
+
+
+def test_changing_role_reconnects_and_takes_effect(network):
+    async def scenario():
+        rack = FakeWing({**defaults(RACK), "io.out.MOD.1.grp": "LCL", "io.out.MOD.1.in": 24})
+        compact = FakeWing(defaults(COMPACT))
+        await rack.start()
+        await compact.start()
+        as_stage = Pairing(**{**COMPACT.__dict__, "role": STAGE})
+        running = engine.Engine([RACK, as_stage], write_names=True, ports={"rack-mac": rack.port, "compact-mac": compact.port})
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: running.links["compact-mac"].connected)
+            await asyncio.sleep(0.3)
+            assert compact.writes == []  # No FOH console, so nothing is named
+
+            await running.reconfigure([RACK, COMPACT])
+            await wait_for(lambda: compact.values["io.in.MOD.1.name"] == "RACK-L24-HH")
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())
+
+
+def test_changes_in_the_database_are_applied_while_running(network, monkeypatch, tmp_path):
+    from headhunter.store import Store
+
+    monkeypatch.setattr(engine, "CONFIG_POLL_SECONDS", 0.1)
+    path = tmp_path / "headhunter.db"
+    with Store(path) as store:
+        store._db.execute(
+            "INSERT INTO consoles VALUES (?, ?, ?, ?, ?, ?, ?, 't', 't', ?, NULL, NULL)",
+            (RACK.console_mac, RACK.console_name, RACK.console_model, RACK.console_serial,
+             RACK.dante_mac, RACK.dante_name, RACK.display_name, STAGE),
+        )
+        store._db.execute(
+            "INSERT INTO consoles VALUES (?, ?, ?, ?, ?, ?, ?, 't', 't', ?, NULL, NULL)",
+            (COMPACT.console_mac, COMPACT.console_name, COMPACT.console_model, COMPACT.console_serial,
+             COMPACT.dante_mac, COMPACT.dante_name, COMPACT.display_name, FOH),
+        )
+        store._db.commit()
+
+    async def scenario():
+        rack = FakeWing({**defaults(RACK), "io.out.MOD.1.grp": "LCL", "io.out.MOD.1.in": 24})
+        compact = FakeWing(defaults(COMPACT))
+        await rack.start()
+        await compact.start()
+        with Store(path) as store:
+            pairings = store.pairings()
+        running = engine.Engine(pairings, ports={"rack-mac": rack.port, "compact-mac": compact.port}, store_path=path)
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: running.links["compact-mac"].connected)
+            await asyncio.sleep(0.3)
+            assert compact.writes == []  # Not writing names yet
+
+            with Store(path) as store:  # As another headhunter command would
+                store.set_setting("write_names", "on")
+                store.rename(RACK.console_mac, "STAGE")
+            await wait_for(lambda: compact.values["io.in.MOD.1.name"] == "STAGE-L24-HH")
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())
+
+
+def test_renaming_a_whole_console_is_summed_up_in_one_line(network, caplog):
+    caplog.set_level("INFO", logger="headhunter.engine")
+
+    async def scenario():
+        rack = FakeWing({**defaults(RACK), **{f"io.out.MOD.{n}.grp": "LCL" for n in range(1, 4)},
+                         **{f"io.out.MOD.{n}.in": n for n in range(1, 4)}})
+        compact = FakeWing(defaults(COMPACT))
+        await rack.start()
+        await compact.start()
+        running = engine.Engine([RACK, COMPACT], write_names=True, ports={"rack-mac": rack.port, "compact-mac": compact.port})
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: "COMPACT: renamed 64 Dante inputs" in caplog.text)
+            assert "COMPACT MOD 1:" not in caplog.text
+
+            rack.push("io.out.MOD.2.in", 9)  # A single change is logged on its own
+            await wait_for(lambda: "COMPACT MOD 2: 'RACK-L02-HH' -> 'RACK-L09-HH'" in caplog.text)
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())

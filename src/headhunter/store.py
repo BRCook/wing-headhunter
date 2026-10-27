@@ -15,7 +15,7 @@ from pathlib import Path
 from headhunter.discovery import DiscoveredConsole, DiscoveredDanteDevice
 
 DISPLAY_NAME_MAX = 7
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 GPIO_COUNT = 4
 
 FOH = "FOH"
@@ -39,6 +39,7 @@ CREATE TABLE consoles (
     phantom_gpio   INTEGER CHECK (phantom_gpio BETWEEN 1 AND {GPIO_COUNT})
 );
 CREATE UNIQUE INDEX consoles_display_name_nocase ON consoles (display_name COLLATE NOCASE);
+CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 """
 
 # Upgrades from each older schema version to the next
@@ -53,6 +54,58 @@ MIGRATIONS = {
     ],
     # Display names are looked up ignoring case, so they must be unique ignoring case too
     3: ["CREATE UNIQUE INDEX consoles_display_name_nocase ON consoles (display_name COLLATE NOCASE)"],
+    4: ["CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)"],
+}
+
+
+@dataclass(frozen=True)
+class Settings:
+    """Headhunter's own settings. Command-line options override them for a single run."""
+
+    write_names: bool = False
+    write_gain: bool = False
+    restore_after: float = 2.0  # Seconds the trim knob must be still before trim is restored
+    stats_minutes: float = 0.0  # 0 means off
+    web_port: int = 8048
+
+
+def _parse_bool(text: str) -> bool:
+    lowered = text.strip().lower()
+    if lowered in ("1", "true", "yes", "on"):
+        return True
+    if lowered in ("0", "false", "no", "off"):
+        return False
+    raise ValueError(f"{text!r} is not on or off")
+
+
+def _parse_seconds(text: str) -> float:
+    value = float(text)
+    if not 0.2 <= value <= 30:
+        raise ValueError("must be between 0.2 and 30 seconds")
+    return value
+
+
+def _parse_minutes(text: str) -> float:
+    value = float(text)
+    if value < 0:
+        raise ValueError("cannot be negative")
+    return value
+
+
+def _parse_port(text: str) -> int:
+    value = int(text)
+    if not 1024 <= value <= 65535:
+        raise ValueError("must be between 1024 and 65535")
+    return value
+
+
+# Setting name -> how its stored text is checked and turned into a value
+SETTING_PARSERS = {
+    "write_names": _parse_bool,
+    "write_gain": _parse_bool,
+    "restore_after": _parse_seconds,
+    "stats_minutes": _parse_minutes,
+    "web_port": _parse_port,
 }
 
 
@@ -131,6 +184,33 @@ class Store:
                     self._db.execute(statement)
                 version += 1
                 self._db.execute(f"PRAGMA user_version = {version}")
+
+    def data_version(self) -> int:
+        """A number that changes whenever another connection changes the database."""
+        return self._db.execute("PRAGMA data_version").fetchone()[0]
+
+    def settings(self) -> Settings:
+        """Every setting, with defaults for any never set."""
+        values = {}
+        for key, text in self._db.execute("SELECT key, value FROM settings"):
+            if key in SETTING_PARSERS:
+                try:
+                    values[key] = SETTING_PARSERS[key](text)
+                except ValueError:
+                    pass  # A bad stored value falls back to the default
+        return Settings(**values)
+
+    def set_setting(self, key: str, text: str) -> None:
+        """Change a setting; raises ValueError for unknown settings or bad values."""
+        if key not in SETTING_PARSERS:
+            raise ValueError(f"Unknown setting {key!r}; settings are {', '.join(SETTING_PARSERS)}")
+        try:
+            value = SETTING_PARSERS[key](text)
+        except ValueError as error:
+            raise ValueError(f"{key}: {error}") from None
+        stored = ("on" if value else "off") if isinstance(value, bool) else str(value)
+        with self._db:
+            self._db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, stored))
 
     def pairings(self) -> list[Pairing]:
         rows = self._db.execute(

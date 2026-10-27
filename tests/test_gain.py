@@ -160,3 +160,30 @@ def test_layer_strips(kind, index, expected):
     from headhunter.gain import layer_strip
 
     assert layer_strip(kind, index) == expected
+
+
+def test_fader_sections_by_model():
+    from headhunter.gain import layer_sections
+
+    def sections(model):
+        return layer_sections(Pairing("m", "n", model, "s", "d", "D", "X", STAGE))
+
+    assert sections("wing-compact") == [("CMPCT", 12)]
+    assert sections("wing-rack") == [("RCK", 4)]
+    assert sections("ngc-full") == [("L", 12), ("C", 8), ("R", 4)]
+
+
+@pytest.mark.parametrize("name, number", [("A", 1), ("b", 2), (" C ", 3), ("D", 4)])
+def test_gpio_names(name, number):
+    from headhunter.buttons import gpio_name, gpio_number
+
+    assert gpio_number(name) == number
+    assert gpio_name(number) == name.strip().upper()
+
+
+@pytest.mark.parametrize("name", ["E", "3", "", "AB"])
+def test_bad_gpio_names(name):
+    from headhunter.buttons import gpio_number
+
+    with pytest.raises(ValueError):
+        gpio_number(name)

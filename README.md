@@ -116,10 +116,10 @@ pip install -e .
 Then set it up, once:
 
 ```sh
-headhunter discover                          # Check that every console and Dante card can be seen
-headhunter pair                              # Pair each console with its Dante card
-headhunter role COMPACT FOH                  # Mark your FOH console
-headhunter buttons COMPACT --gain 3 --phantom 4   # Choose its gain mode and phantom power GPIOs
+headhunter discover                               # Check that every console and Dante card can be seen
+headhunter pair                                   # Pair each console with its Dante card
+headhunter role COMPACT FOH                       # Mark your FOH console
+headhunter buttons COMPACT --gain C --phantom D   # Choose its gain mode and phantom power GPIOs
 ```
 
 `headhunter dante` shows what each paired console receives over Dante, and `headhunter names` shows the source names Headhunter would write, without writing them.
@@ -130,7 +130,7 @@ Finally, run it:
 headhunter run --write-names --write-gain
 ```
 
-Headhunter is careful by default. Without `--write-names` and `--write-gain`, it does everything except change the consoles, and logs what it *would* have done; this is a good way to check a new setup before letting it loose. Press Ctrl+C to stop it.
+Headhunter is careful by default. You must set `headhunter settings write_names on` and `headhunter settings write_gain on` before Headhunter will manipulate anything on your console. These changes are permanent; to only allow changes for a single run, use `headhunter run --write-names --write-gain`.
 
 A few more options:
 
