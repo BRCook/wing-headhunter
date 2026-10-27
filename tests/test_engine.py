@@ -1275,3 +1275,111 @@ def test_a_press_after_an_unreported_release_still_counts(network, quick_flashes
             await compact.stop()
 
     asyncio.run(scenario())
+
+
+def with_buttons(wing, phantom_flag="D-P"):
+    """Give a fake Compact Ben's custom control buttons: gain mode on GPIO C, phantom power on GPIO D."""
+    from headhunter import controls
+
+    for button in controls.all_buttons(COMPACT):
+        wing.add_button(button.path)
+    wing.add_button("$ctl.user.U2.1.bu", "GPIO", "", "C")
+    wing.add_button("$ctl.user.U2.2.bu", "GPIO", "", phantom_flag)
+    return wing
+
+
+def test_the_phantom_button_label_says_what_it_will_do(network, quick_flashes):
+    foh = Pairing(**{**COMPACT.__dict__, "gain_gpio": 3, "phantom_gpio": 4})
+
+    async def scenario():
+        rack, compact = stage_box_setup(foh)
+        with_buttons(compact)
+
+        def label():
+            return compact.values["$ctl.user.U2.2.bu.name"]
+
+        await rack.start()
+        await compact.start()
+        running = engine.Engine([RACK, foh], ports={"rack-mac": rack.port, "compact-mac": compact.port}, write_gain=True)
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: label() == "|HH DISABLED")
+            assert compact.values["$ctl.user.U2.1.bu.name"] == "|HH GAIN OFF"
+            compact.push("$ctl.gpio.3.gpstate", 1)
+            await wait_for(lambda: label() == "|HH 48V ON")  # Channel 13: 48V off
+            assert compact.values["$ctl.user.U2.1.bu.name"] == "|HH GAIN ON"
+            compact.push("$ctl.gpio.4.gpstate", 1)
+            await wait_for(lambda: label() == "|HH 48V OFF")  # After turning it on
+            compact.push("$ctl.gpio.4.gpstate", 0)
+            compact.push("$ctl.$stat.selidx", 5)  # A channel with no source
+            await wait_for(lambda: label() == "|HH NO 48V")
+            compact.push("$ctl.gpio.3.gpstate", 0)
+            await wait_for(lambda: label() == "|HH DISABLED")
+            assert compact.values["$ctl.user.U2.1.bu.name"] == "|HH GAIN OFF"
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())
+
+
+def test_a_toggle_phantom_button_is_refused(network, quick_flashes, caplog):
+    caplog.set_level("INFO", logger="headhunter.engine")
+    foh = Pairing(**{**COMPACT.__dict__, "gain_gpio": 3, "phantom_gpio": 4})
+
+    async def scenario():
+        rack, compact = stage_box_setup(foh)
+        with_buttons(compact, phantom_flag="D")  # A toggle: one press would leave it "held"
+        await rack.start()
+        await compact.start()
+        running = engine.Engine([RACK, foh], ports={"rack-mac": rack.port, "compact-mac": compact.port}, write_gain=True)
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: "phantom power is off until it is a push button" in caplog.text)
+            compact.push("$ctl.gpio.3.gpstate", 1)
+            await wait_for(lambda: running.gain_mode["compact-mac"])
+            compact.push("$ctl.gpio.4.gpstate", 1)
+            await asyncio.sleep(0.6)
+            assert rack.values["io.in.A.8.vph"] == 0
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())
+
+
+def test_changing_the_phantom_button_to_a_toggle_while_running_is_noticed(network, quick_flashes, caplog):
+    caplog.set_level("INFO", logger="headhunter.engine")
+    foh = Pairing(**{**COMPACT.__dict__, "gain_gpio": 3, "phantom_gpio": 4})
+
+    async def scenario():
+        rack, compact = stage_box_setup(foh)
+        with_buttons(compact)  # A push button, to start with
+        await rack.start()
+        await compact.start()
+        running = engine.Engine([RACK, foh], ports={"rack-mac": rack.port, "compact-mac": compact.port}, write_gain=True)
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: running._phantom_usable.get("compact-mac") is True)
+            compact.push_flag("$ctl.user.U2.2.bu", "D")  # Someone makes it a toggle on the console
+            await wait_for(lambda: "phantom power is off until it is a push button" in caplog.text)
+            compact.push("$ctl.gpio.3.gpstate", 1)
+            await wait_for(lambda: running.gain_mode["compact-mac"])
+            compact.push("$ctl.gpio.4.gpstate", 1)
+            await asyncio.sleep(0.6)
+            assert rack.values["io.in.A.8.vph"] == 0
+
+            compact.push("$ctl.gpio.4.gpstate", 0)
+            compact.push_flag("$ctl.user.U2.2.bu", "D-P")  # And back
+            await wait_for(lambda: "phantom power is back on" in caplog.text)
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())

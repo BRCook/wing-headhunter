@@ -276,7 +276,7 @@ Headhunter only adjusts a stage box preamp when the console reports that the sta
 
 Trim cannot go past ±18 dB, so if a channel's trim is already at +18 dB, the knob cannot turn any further and you cannot add gain. If it is close to the limit, you can still add gain, just a little at a time; trim is restored after every adjustment, so you can simply repeat it. Similarly for −18 dB and reducing gain.
 
-A few rules keep this safe:
+A couple of rules keep this safe:
 
 - Only the selected channel counts. Trim changes on any other channel – snapshot and scene recalls, Mixing Station, anything else – are treated as real trim changes: Headhunter does not act on them, and remembers them as that channel's new trim, so a later restore never undoes them. This means you should never be adjusting gain on a channel with Headhunter while also making changes to that channel from another connection!
 - Channels without remote gain are ignored. If the selected channel's source has no preamp (see the table above), or is not a Dante input from a known device, adjusting trim does exactly what it normally does.

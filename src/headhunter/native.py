@@ -265,6 +265,12 @@ class DefinitionRecord:
     steps: int | None = None
     items: tuple[str, ...] = ()
     max_length: int | None = None
+    index: int = 0  # For numbered entries, which have no name: their number
+
+    @property
+    def key(self) -> str:
+        """How the entry appears in a path: its name, or its number if it has no name."""
+        return self.name or str(self.index)
 
     @property
     def type(self) -> str:
@@ -308,7 +314,7 @@ def _parse_definition(data: bytes, offset: int, length: int) -> DefinitionRecord
     body = data[offset:length]
     try:
         position = 3 if struct.unpack_from(">H", body, 1)[0] else 7
-        parent, hash_ = struct.unpack_from(">II", body, position)
+        parent, hash_, index = struct.unpack_from(">IIH", body, position)
         position += 10  # parent, hash, index
         name_length = body[position]
         name = body[position + 1 : position + 1 + name_length].decode("utf-8", "replace")
@@ -350,7 +356,7 @@ def _parse_definition(data: bytes, offset: int, length: int) -> DefinitionRecord
             details = {"max_length": struct.unpack_from(">H", body, position)[0]}
     except (struct.error, IndexError):
         return None
-    return DefinitionRecord(parent, hash_, name, long_name, flags, **details)
+    return DefinitionRecord(parent, hash_, name, long_name, flags, index=index, **details)
 
 
 class RecordDecoder:
@@ -475,7 +481,10 @@ class NativeClient:
 
     async def get(self, path: str, timeout: float = 2.0) -> Value:
         """Read a parameter's current value."""
-        hash_ = wing_hash(path)
+        return await self.get_hash(wing_hash(path), timeout)
+
+    async def get_hash(self, hash_: int, timeout: float = 2.0) -> Value:
+        """Read a parameter's current value by its hash, as given in its definition."""
         future: asyncio.Future[Value] = asyncio.get_running_loop().create_future()
         self._pending_values.setdefault(hash_, []).append(future)
         self._send(bytes([TOKEN_HASH]) + struct.pack(">I", hash_) + bytes([TOKEN_DATA_REQUEST]))
@@ -516,7 +525,12 @@ class NativeClient:
 
     def set(self, path: str, value: Value) -> None:
         """Write a parameter. This changes the console; use with care."""
-        self._send(bytes([TOKEN_HASH]) + struct.pack(">I", wing_hash(path)) + encode_value(value))
+        self.set_hash(wing_hash(path), value)
+
+    def set_hash(self, hash_: int, value: Value) -> None:
+        """Write a parameter by its hash, as given in its definition. Some settings, such as a
+        custom control button's function settings, can only be reached this way."""
+        self._send(bytes([TOKEN_HASH]) + struct.pack(">I", hash_) + encode_value(value))
 
     async def events(self) -> AsyncIterator[ValueRecord]:
         """Values the console sends on its own, as they arrive; ends if the connection drops."""

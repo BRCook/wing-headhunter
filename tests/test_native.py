@@ -103,3 +103,9 @@ def test_records_split_across_chunks():
     for position in range(0, len(payload), 3):
         records += decoder.feed(payload[position : position + 3])
     assert [r.value for r in records] == [32.5, "RACK-L24-HH", 1]
+
+
+def test_numbered_entries_are_named_by_their_number():
+    body = struct.pack(">IIH", 1, 2, 3) + b"\x00" + b"\x00" + struct.pack(">H", 0x00)
+    definition = RecordDecoder().feed(b"\xdf" + struct.pack(">H", len(body)) + body)[0]
+    assert (definition.name, definition.index, definition.key) == ("", 3, "3")

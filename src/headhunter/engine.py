@@ -22,7 +22,7 @@ import logging
 from collections.abc import Callable
 
 from headhunter.consoles import locate
-from headhunter import gain
+from headhunter import controls, gain
 from headhunter.buttons import flash, gpio_name
 from headhunter.dante import NetaudioError, Subscription, read_subscriptions
 from headhunter.naming import PlannedName, apply_names, paths_for, plan_from_state
@@ -99,7 +99,7 @@ class ConsoleLink:
                     path = self._by_hash.get(event.hash)
                     # Button reports always count, even if they repeat: Headhunter's own flashes
                     # change a button's state without being reported, so a repeat can be a new press
-                    if path is not None and (self.state.get(path) != event.value or path.endswith(".gpstate")):
+                    if path is not None and (self.state.get(path) != event.value or path.endswith((".gpstate", ".gpio"))):
                         old = self.state.get(path)
                         self.state[path] = event.value
                         self._notify(path, old, event.value)
@@ -138,6 +138,10 @@ class ConsoleLink:
         if missing:
             log.warning("%s did not report %d parameters, e.g. %s", self.name, len(missing), ", ".join(missing[:3]))
         return state
+
+    def watch(self, hash_: int, name: str) -> None:
+        """Also report changes to a setting reached only by its address, under a made-up name."""
+        self._by_hash[hash_] = name
 
     @staticmethod
     async def _read(client: NativeClient, path: str, timeout: float) -> Value:
@@ -205,6 +209,13 @@ class Engine:
         self._phantom_holds: dict[str, asyncio.TimerHandle] = {}
         self._flashes: set[asyncio.Task] = set()
         self._button_flashes: dict[str, asyncio.Task] = {}  # The phantom power button flash on each console
+        # The custom control buttons using the phantom power GPIO, whether they can be used
+        # (they must be push buttons), and the label last written to them
+        self._phantom_buttons: dict[str, list[controls.Button]] = {}
+        self._gain_buttons: dict[str, list[controls.Button]] = {}
+        self._phantom_usable: dict[str, bool] = {}
+        self._labels: dict[tuple[str, str], str] = {}  # (console, "gain" or "phantom") -> label last written
+        self._scans: dict[str, asyncio.Task] = {}
         # Strip light flashes on a console take turns, so one never saves another's colours as the real ones
         self._light_locks: dict[str, asyncio.Lock] = {}
 
@@ -370,7 +381,7 @@ class Engine:
     def _paths(pairing: Pairing) -> list[str]:
         paths = paths_for(pairing) + gain.preamp_paths(pairing)
         if pairing.is_foh:
-            paths += gain.foh_paths(pairing)
+            paths += gain.foh_paths(pairing) + controls.mode_paths(pairing)
         return list(dict.fromkeys(paths))  # Without duplicates, in order
 
     def _changed(
@@ -381,8 +392,11 @@ class Engine:
         if link is not None and path is None and link.pairing.is_foh:
             if link.connected:
                 self._fresh_connection(link)
+                self._scan_buttons(link.pairing)
             else:
                 self._forget(link.pairing)
+        if link is not None and path is not None and link.pairing.is_foh and path.startswith("$ctl.user."):
+            self._scan_buttons(link.pairing)  # A button's function changed
         if link is not None and path is not None and link.pairing.is_foh:
             self._button_changed(link.pairing, path, old, new)
             self._trim_changed(link, path, old, new)
@@ -448,6 +462,81 @@ class Engine:
             timer.cancel()
         self._work.put_nowait(("restore", foh, strip, None))
 
+    def _scan_buttons(self, foh: Pairing) -> None:
+        """Look up which custom control buttons are Headhunter's, in the background."""
+        previous = self._scans.pop(foh.console_mac, None)
+        if previous is not None:
+            previous.cancel()
+        self._scans[foh.console_mac] = self._start_flash(self._scan(foh))
+
+    async def _scan(self, foh: Pairing) -> None:
+        mac = foh.console_mac
+        client = self.links[mac].client
+        if client is None:
+            return
+        try:
+            buttons = await controls.gpio_buttons(client, foh)
+        except (ConnectionError, TimeoutError):
+            return
+        # Watch every GPIO button's flag, so that changing one (say, from push to toggle) is noticed
+        for button, setup in buttons:
+            if setup.flag_address is not None:
+                self.links[mac].watch(setup.flag_address, f"{button.path}.gpio")
+        on_gpio = lambda gpio: [(b, s.gpio[1]) for b, s in buttons if s.gpio is not None and s.gpio[0] == gpio]
+        if foh.gain_gpio is not None:
+            for button, push in on_gpio(foh.gain_gpio):
+                if push:
+                    log.warning("%s: %s is a push button on the gain mode GPIO; gain mode needs a toggle",
+                                foh.display_name, button.label)
+            self._gain_buttons[mac] = [button for button, _ in on_gpio(foh.gain_gpio)]
+        self._clear_labels(mac)  # Write labels again, to buttons that may be new
+        if foh.phantom_gpio is None:
+            self._update_label(foh)
+            return
+        found = on_gpio(foh.phantom_gpio)
+        self._phantom_buttons[mac] = [button for button, _ in found]
+        toggles = [button for button, push in found if not push]
+        usable = not toggles
+        if toggles:
+            log.warning("%s: %s is a toggle on the phantom power GPIO; phantom power is off until it is a push button",
+                        foh.display_name, ", ".join(button.label for button in toggles))
+            self._cancel_phantom_hold(foh)
+        elif self._phantom_usable.get(mac) is False:
+            log.info("%s: the phantom power button is a push button again; phantom power is back on", foh.display_name)
+        elif not found:
+            log.info("%s: no custom control button uses GPIO %s, the phantom power GPIO",
+                     foh.display_name, gpio_name(foh.phantom_gpio))
+        self._phantom_usable[mac] = usable
+        self._update_label(foh)
+
+    def _clear_labels(self, mac: str) -> None:
+        for which in ("gain", "phantom"):
+            self._labels.pop((mac, which), None)
+
+    def _update_label(self, foh: Pairing) -> None:
+        """Label the gain mode button with whether gain mode is on, and the phantom power button
+        with what pressing it will do now."""
+        mac = foh.console_mac
+        link = self.links.get(mac)
+        if not self.write_gain or link is None or link.client is None:
+            return
+        gain_mode = self.gain_mode.get(mac, False)
+        self._write_label(link.client, mac, "gain", self._gain_buttons.get(mac), controls.gain_label(gain_mode))
+        if not self._phantom_usable.get(mac):
+            return
+        target = self.targets.get(mac)
+        phantoms = None
+        if target is not None and target.preamps:
+            phantoms = [bool(self.links[p.console.console_mac].state.get(f"{p.path}.vph")) for p in target.preamps]
+        self._write_label(link.client, mac, "phantom", self._phantom_buttons.get(mac), controls.phantom_label(gain_mode, phantoms))
+
+    def _write_label(self, client: NativeClient, mac: str, which: str, buttons, label: str) -> None:
+        if not buttons or self._labels.get((mac, which)) == label:
+            return
+        for button in buttons:
+            client.set(f"{button.path}.name", label)
+        self._labels[(mac, which)] = label
+
     def _fresh_connection(self, link: ConsoleLink) -> None:
         """Every connection to a FOH console starts from a blank slate, as at startup:
         a gain mode button that is already on is noted, and ignored."""
@@ -461,6 +550,7 @@ class Engine:
         """A FOH console dropped off the network: abandon everything in progress on it.
         Nothing is finished or restored when it comes back."""
         mac = foh.console_mac
+        self._clear_labels(mac)
         if self.gain_mode[mac]:
             log.warning("%s: gain mode off; everything in progress is abandoned", foh.display_name)
         self.gain_mode[mac] = False
@@ -517,6 +607,9 @@ class Engine:
             # a flash may never be reported, so the button's previous state cannot be trusted
             if foh.console_mac in self._phantom_holds or not self.gain_mode[foh.console_mac]:
                 return  # Already timing this press, or outside gain mode, where the button does nothing
+            if self._phantom_usable.get(foh.console_mac) is False:
+                log.warning("%s: phantom power button ignored; it must be a push button", foh.display_name)
+                return
             strip = gain.strip_from_selidx(self.links[foh.console_mac].state.get("$ctl.$stat.selidx"))
             if strip is None:
                 return
@@ -566,6 +659,10 @@ class Engine:
                 if pairing.is_foh:
                     with contextlib.suppress(ConnectionError, TimeoutError):
                         await self._unshow_now(pairing)
+                        self.gain_mode[pairing.console_mac] = False
+                        self._update_label(pairing)
+                        if (client := self.links[pairing.console_mac].client) is not None:
+                            await client.flush()
             for task in [*tasks, *self._link_tasks.values()]:
                 task.cancel()
             self._running = False
@@ -685,6 +782,7 @@ class Engine:
         if not confirmed:
             return  # No flash: not everything changed
         log.info("%s %s: %s 48V %s", foh.display_name, strip.label, labels, "on" if wanted else "off")
+        self._update_label(foh)
         await self._show(foh, strip, preamps)
         foh_client = self.links[foh.console_mac].client
         if foh_client is not None and foh.phantom_gpio is not None:
@@ -961,6 +1059,7 @@ class Engine:
             self.targets[foh.console_mac] = None
             return
         description = await self._description(foh)
+        self._update_label(foh)
         if self._described.get(foh.console_mac) != description:
             self._described[foh.console_mac] = description
             log.info("%s", description)
