@@ -1,0 +1,1552 @@
+{
+  "WingCompact.local.": {
+    "name": "WingCompact",
+    "tx_channels": {
+      "01": {
+        "number": 1,
+        "name": "01",
+        "friendly_name": "01",
+        "factory_name": "01"
+      },
+      "02": {
+        "number": 2,
+        "name": "02",
+        "friendly_name": "02",
+        "factory_name": "02"
+      },
+      "03": {
+        "number": 3,
+        "name": "03",
+        "friendly_name": "03",
+        "factory_name": "03"
+      },
+      "04": {
+        "number": 4,
+        "name": "04",
+        "friendly_name": "04",
+        "factory_name": "04"
+      },
+      "05": {
+        "number": 5,
+        "name": "05",
+        "friendly_name": "05",
+        "factory_name": "05"
+      },
+      "06": {
+        "number": 6,
+        "name": "06",
+        "friendly_name": "06",
+        "factory_name": "06"
+      },
+      "07": {
+        "number": 7,
+        "name": "07",
+        "friendly_name": "07",
+        "factory_name": "07"
+      },
+      "08": {
+        "number": 8,
+        "name": "08",
+        "friendly_name": "08",
+        "factory_name": "08"
+      },
+      "09": {
+        "number": 9,
+        "name": "09",
+        "friendly_name": "09",
+        "factory_name": "09"
+      },
+      "10": {
+        "number": 10,
+        "name": "10",
+        "friendly_name": "10",
+        "factory_name": "10"
+      },
+      "11": {
+        "number": 11,
+        "name": "11",
+        "friendly_name": "11",
+        "factory_name": "11"
+      },
+      "12": {
+        "number": 12,
+        "name": "12",
+        "friendly_name": "12",
+        "factory_name": "12"
+      },
+      "13": {
+        "number": 13,
+        "name": "13",
+        "friendly_name": "13",
+        "factory_name": "13"
+      },
+      "14": {
+        "number": 14,
+        "name": "14",
+        "friendly_name": "14",
+        "factory_name": "14"
+      },
+      "15": {
+        "number": 15,
+        "name": "15",
+        "friendly_name": "15",
+        "factory_name": "15"
+      },
+      "16": {
+        "number": 16,
+        "name": "16",
+        "friendly_name": "16",
+        "factory_name": "16"
+      },
+      "17": {
+        "number": 17,
+        "name": "17",
+        "friendly_name": "17",
+        "factory_name": "17"
+      },
+      "18": {
+        "number": 18,
+        "name": "18",
+        "friendly_name": "18",
+        "factory_name": "18"
+      },
+      "19": {
+        "number": 19,
+        "name": "19",
+        "friendly_name": "19",
+        "factory_name": "19"
+      },
+      "20": {
+        "number": 20,
+        "name": "20",
+        "friendly_name": "20",
+        "factory_name": "20"
+      },
+      "21": {
+        "number": 21,
+        "name": "21",
+        "friendly_name": "21",
+        "factory_name": "21"
+      },
+      "22": {
+        "number": 22,
+        "name": "22",
+        "friendly_name": "22",
+        "factory_name": "22"
+      },
+      "23": {
+        "number": 23,
+        "name": "23",
+        "friendly_name": "23",
+        "factory_name": "23"
+      },
+      "24": {
+        "number": 24,
+        "name": "24",
+        "friendly_name": "24",
+        "factory_name": "24"
+      },
+      "25": {
+        "number": 25,
+        "name": "25",
+        "friendly_name": "25",
+        "factory_name": "25"
+      },
+      "26": {
+        "number": 26,
+        "name": "26",
+        "friendly_name": "26",
+        "factory_name": "26"
+      },
+      "27": {
+        "number": 27,
+        "name": "27",
+        "friendly_name": "27",
+        "factory_name": "27"
+      },
+      "28": {
+        "number": 28,
+        "name": "28",
+        "friendly_name": "28",
+        "factory_name": "28"
+      },
+      "29": {
+        "number": 29,
+        "name": "29",
+        "friendly_name": "29",
+        "factory_name": "29"
+      },
+      "30": {
+        "number": 30,
+        "name": "30",
+        "friendly_name": "30",
+        "factory_name": "30"
+      },
+      "31": {
+        "number": 31,
+        "name": "31",
+        "friendly_name": "31",
+        "factory_name": "31"
+      },
+      "32": {
+        "number": 32,
+        "name": "32",
+        "friendly_name": "32",
+        "factory_name": "32"
+      },
+      "33": {
+        "number": 33,
+        "name": "33",
+        "friendly_name": "33",
+        "factory_name": "33"
+      },
+      "34": {
+        "number": 34,
+        "name": "34",
+        "friendly_name": "34",
+        "factory_name": "34"
+      },
+      "35": {
+        "number": 35,
+        "name": "35",
+        "friendly_name": "35",
+        "factory_name": "35"
+      },
+      "36": {
+        "number": 36,
+        "name": "36",
+        "friendly_name": "36",
+        "factory_name": "36"
+      },
+      "37": {
+        "number": 37,
+        "name": "37",
+        "friendly_name": "37",
+        "factory_name": "37"
+      },
+      "38": {
+        "number": 38,
+        "name": "38",
+        "friendly_name": "38",
+        "factory_name": "38"
+      },
+      "39": {
+        "number": 39,
+        "name": "39",
+        "friendly_name": "39",
+        "factory_name": "39"
+      },
+      "40": {
+        "number": 40,
+        "name": "40",
+        "friendly_name": "40",
+        "factory_name": "40"
+      },
+      "41": {
+        "number": 41,
+        "name": "41",
+        "friendly_name": "41",
+        "factory_name": "41"
+      },
+      "42": {
+        "number": 42,
+        "name": "42",
+        "friendly_name": "42",
+        "factory_name": "42"
+      },
+      "43": {
+        "number": 43,
+        "name": "43",
+        "friendly_name": "43",
+        "factory_name": "43"
+      },
+      "44": {
+        "number": 44,
+        "name": "44",
+        "friendly_name": "44",
+        "factory_name": "44"
+      },
+      "45": {
+        "number": 45,
+        "name": "45",
+        "friendly_name": "45",
+        "factory_name": "45"
+      },
+      "46": {
+        "number": 46,
+        "name": "46",
+        "friendly_name": "46",
+        "factory_name": "46"
+      },
+      "47": {
+        "number": 47,
+        "name": "47",
+        "friendly_name": "47",
+        "factory_name": "47"
+      },
+      "48": {
+        "number": 48,
+        "name": "48",
+        "friendly_name": "48",
+        "factory_name": "48"
+      },
+      "49": {
+        "number": 49,
+        "name": "49",
+        "friendly_name": "49",
+        "factory_name": "49"
+      },
+      "50": {
+        "number": 50,
+        "name": "50",
+        "friendly_name": "50",
+        "factory_name": "50"
+      },
+      "51": {
+        "number": 51,
+        "name": "51",
+        "friendly_name": "51",
+        "factory_name": "51"
+      },
+      "52": {
+        "number": 52,
+        "name": "52",
+        "friendly_name": "52",
+        "factory_name": "52"
+      },
+      "53": {
+        "number": 53,
+        "name": "53",
+        "friendly_name": "53",
+        "factory_name": "53"
+      },
+      "54": {
+        "number": 54,
+        "name": "54",
+        "friendly_name": "54",
+        "factory_name": "54"
+      },
+      "55": {
+        "number": 55,
+        "name": "55",
+        "friendly_name": "55",
+        "factory_name": "55"
+      },
+      "56": {
+        "number": 56,
+        "name": "56",
+        "friendly_name": "56",
+        "factory_name": "56"
+      },
+      "57": {
+        "number": 57,
+        "name": "57",
+        "friendly_name": "57",
+        "factory_name": "57"
+      },
+      "58": {
+        "number": 58,
+        "name": "58",
+        "friendly_name": "58",
+        "factory_name": "58"
+      },
+      "59": {
+        "number": 59,
+        "name": "59",
+        "friendly_name": "59",
+        "factory_name": "59"
+      },
+      "60": {
+        "number": 60,
+        "name": "60",
+        "friendly_name": "60",
+        "factory_name": "60"
+      },
+      "61": {
+        "number": 61,
+        "name": "61",
+        "friendly_name": "61",
+        "factory_name": "61"
+      },
+      "62": {
+        "number": 62,
+        "name": "62",
+        "friendly_name": "62",
+        "factory_name": "62"
+      },
+      "63": {
+        "number": 63,
+        "name": "63",
+        "friendly_name": "63",
+        "factory_name": "63"
+      },
+      "64": {
+        "number": 64,
+        "name": "64",
+        "friendly_name": "64",
+        "factory_name": "64"
+      }
+    },
+    "rx_channels": {
+      "01": {
+        "number": 1,
+        "name": "01",
+        "friendly_name": "01",
+        "factory_name": "01"
+      },
+      "02": {
+        "number": 2,
+        "name": "02",
+        "friendly_name": "02",
+        "factory_name": "02"
+      },
+      "03": {
+        "number": 3,
+        "name": "03",
+        "friendly_name": "03",
+        "factory_name": "03"
+      },
+      "04": {
+        "number": 4,
+        "name": "04",
+        "friendly_name": "04",
+        "factory_name": "04"
+      },
+      "05": {
+        "number": 5,
+        "name": "05",
+        "friendly_name": "05",
+        "factory_name": "05"
+      },
+      "06": {
+        "number": 6,
+        "name": "06",
+        "friendly_name": "06",
+        "factory_name": "06"
+      },
+      "07": {
+        "number": 7,
+        "name": "07",
+        "friendly_name": "07",
+        "factory_name": "07"
+      },
+      "08": {
+        "number": 8,
+        "name": "08",
+        "friendly_name": "08",
+        "factory_name": "08"
+      },
+      "09": {
+        "number": 9,
+        "name": "09",
+        "friendly_name": "09",
+        "factory_name": "09"
+      },
+      "10": {
+        "number": 10,
+        "name": "10",
+        "friendly_name": "10",
+        "factory_name": "10"
+      },
+      "11": {
+        "number": 11,
+        "name": "11",
+        "friendly_name": "11",
+        "factory_name": "11"
+      },
+      "12": {
+        "number": 12,
+        "name": "12",
+        "friendly_name": "12",
+        "factory_name": "12"
+      },
+      "13": {
+        "number": 13,
+        "name": "13",
+        "friendly_name": "13",
+        "factory_name": "13"
+      },
+      "14": {
+        "number": 14,
+        "name": "14",
+        "friendly_name": "14",
+        "factory_name": "14"
+      },
+      "15": {
+        "number": 15,
+        "name": "15",
+        "friendly_name": "15",
+        "factory_name": "15"
+      },
+      "16": {
+        "number": 16,
+        "name": "16",
+        "friendly_name": "16",
+        "factory_name": "16"
+      },
+      "17": {
+        "number": 17,
+        "name": "17",
+        "friendly_name": "17",
+        "factory_name": "17"
+      },
+      "18": {
+        "number": 18,
+        "name": "18",
+        "friendly_name": "18",
+        "factory_name": "18"
+      },
+      "19": {
+        "number": 19,
+        "name": "19",
+        "friendly_name": "19",
+        "factory_name": "19"
+      },
+      "20": {
+        "number": 20,
+        "name": "20",
+        "friendly_name": "20",
+        "factory_name": "20"
+      },
+      "21": {
+        "number": 21,
+        "name": "21",
+        "friendly_name": "21",
+        "factory_name": "21"
+      },
+      "22": {
+        "number": 22,
+        "name": "22",
+        "friendly_name": "22",
+        "factory_name": "22"
+      },
+      "23": {
+        "number": 23,
+        "name": "23",
+        "friendly_name": "23",
+        "factory_name": "23"
+      },
+      "24": {
+        "number": 24,
+        "name": "24",
+        "friendly_name": "24",
+        "factory_name": "24"
+      },
+      "25": {
+        "number": 25,
+        "name": "25",
+        "friendly_name": "25",
+        "factory_name": "25"
+      },
+      "26": {
+        "number": 26,
+        "name": "26",
+        "friendly_name": "26",
+        "factory_name": "26"
+      },
+      "27": {
+        "number": 27,
+        "name": "27",
+        "friendly_name": "27",
+        "factory_name": "27"
+      },
+      "28": {
+        "number": 28,
+        "name": "28",
+        "friendly_name": "28",
+        "factory_name": "28"
+      },
+      "29": {
+        "number": 29,
+        "name": "29",
+        "friendly_name": "29",
+        "factory_name": "29"
+      },
+      "30": {
+        "number": 30,
+        "name": "30",
+        "friendly_name": "30",
+        "factory_name": "30"
+      },
+      "31": {
+        "number": 31,
+        "name": "31",
+        "friendly_name": "31",
+        "factory_name": "31"
+      },
+      "32": {
+        "number": 32,
+        "name": "32",
+        "friendly_name": "32",
+        "factory_name": "32"
+      },
+      "33": {
+        "number": 33,
+        "name": "33",
+        "friendly_name": "33",
+        "factory_name": "33"
+      },
+      "34": {
+        "number": 34,
+        "name": "34",
+        "friendly_name": "34",
+        "factory_name": "34"
+      },
+      "35": {
+        "number": 35,
+        "name": "35",
+        "friendly_name": "35",
+        "factory_name": "35"
+      },
+      "36": {
+        "number": 36,
+        "name": "36",
+        "friendly_name": "36",
+        "factory_name": "36"
+      },
+      "37": {
+        "number": 37,
+        "name": "37",
+        "friendly_name": "37",
+        "factory_name": "37"
+      },
+      "38": {
+        "number": 38,
+        "name": "38",
+        "friendly_name": "38",
+        "factory_name": "38"
+      },
+      "39": {
+        "number": 39,
+        "name": "39",
+        "friendly_name": "39",
+        "factory_name": "39"
+      },
+      "40": {
+        "number": 40,
+        "name": "40",
+        "friendly_name": "40",
+        "factory_name": "40"
+      },
+      "41": {
+        "number": 41,
+        "name": "41",
+        "friendly_name": "41",
+        "factory_name": "41"
+      },
+      "42": {
+        "number": 42,
+        "name": "42",
+        "friendly_name": "42",
+        "factory_name": "42"
+      },
+      "43": {
+        "number": 43,
+        "name": "43",
+        "friendly_name": "43",
+        "factory_name": "43"
+      },
+      "44": {
+        "number": 44,
+        "name": "44",
+        "friendly_name": "44",
+        "factory_name": "44"
+      },
+      "45": {
+        "number": 45,
+        "name": "45",
+        "friendly_name": "45",
+        "factory_name": "45"
+      },
+      "46": {
+        "number": 46,
+        "name": "46",
+        "friendly_name": "46",
+        "factory_name": "46"
+      },
+      "47": {
+        "number": 47,
+        "name": "47",
+        "friendly_name": "47",
+        "factory_name": "47"
+      },
+      "48": {
+        "number": 48,
+        "name": "48",
+        "friendly_name": "48",
+        "factory_name": "48"
+      },
+      "49": {
+        "number": 49,
+        "name": "49",
+        "friendly_name": "49",
+        "factory_name": "49"
+      },
+      "50": {
+        "number": 50,
+        "name": "50",
+        "friendly_name": "50",
+        "factory_name": "50"
+      },
+      "51": {
+        "number": 51,
+        "name": "51",
+        "friendly_name": "51",
+        "factory_name": "51"
+      },
+      "52": {
+        "number": 52,
+        "name": "52",
+        "friendly_name": "52",
+        "factory_name": "52"
+      },
+      "53": {
+        "number": 53,
+        "name": "53",
+        "friendly_name": "53",
+        "factory_name": "53"
+      },
+      "54": {
+        "number": 54,
+        "name": "54",
+        "friendly_name": "54",
+        "factory_name": "54"
+      },
+      "55": {
+        "number": 55,
+        "name": "55",
+        "friendly_name": "55",
+        "factory_name": "55"
+      },
+      "56": {
+        "number": 56,
+        "name": "56",
+        "friendly_name": "56",
+        "factory_name": "56"
+      },
+      "57": {
+        "number": 57,
+        "name": "57",
+        "friendly_name": "57",
+        "factory_name": "57"
+      },
+      "58": {
+        "number": 58,
+        "name": "58",
+        "friendly_name": "58",
+        "factory_name": "58"
+      },
+      "59": {
+        "number": 59,
+        "name": "59",
+        "friendly_name": "59",
+        "factory_name": "59"
+      },
+      "60": {
+        "number": 60,
+        "name": "60",
+        "friendly_name": "60",
+        "factory_name": "60"
+      },
+      "61": {
+        "number": 61,
+        "name": "61",
+        "friendly_name": "61",
+        "factory_name": "61"
+      },
+      "62": {
+        "number": 62,
+        "name": "62",
+        "friendly_name": "62",
+        "factory_name": "62"
+      },
+      "63": {
+        "number": 63,
+        "name": "63",
+        "friendly_name": "63",
+        "factory_name": "63"
+      },
+      "64": {
+        "number": 64,
+        "name": "64",
+        "friendly_name": "64",
+        "factory_name": "64"
+      }
+    }
+  },
+  "WingRack.local.": {
+    "name": "WingRack",
+    "tx_channels": {
+      "01": {
+        "number": 1,
+        "name": "01",
+        "friendly_name": "01",
+        "factory_name": "01"
+      },
+      "02": {
+        "number": 2,
+        "name": "02",
+        "friendly_name": "02",
+        "factory_name": "02"
+      },
+      "03": {
+        "number": 3,
+        "name": "03",
+        "friendly_name": "03",
+        "factory_name": "03"
+      },
+      "04": {
+        "number": 4,
+        "name": "04",
+        "friendly_name": "04",
+        "factory_name": "04"
+      },
+      "05": {
+        "number": 5,
+        "name": "05",
+        "friendly_name": "05",
+        "factory_name": "05"
+      },
+      "06": {
+        "number": 6,
+        "name": "06",
+        "friendly_name": "06",
+        "factory_name": "06"
+      },
+      "07": {
+        "number": 7,
+        "name": "07",
+        "friendly_name": "07",
+        "factory_name": "07"
+      },
+      "08": {
+        "number": 8,
+        "name": "08",
+        "friendly_name": "08",
+        "factory_name": "08"
+      },
+      "09": {
+        "number": 9,
+        "name": "09",
+        "friendly_name": "09",
+        "factory_name": "09"
+      },
+      "10": {
+        "number": 10,
+        "name": "10",
+        "friendly_name": "10",
+        "factory_name": "10"
+      },
+      "11": {
+        "number": 11,
+        "name": "11",
+        "friendly_name": "11",
+        "factory_name": "11"
+      },
+      "12": {
+        "number": 12,
+        "name": "12",
+        "friendly_name": "12",
+        "factory_name": "12"
+      },
+      "13": {
+        "number": 13,
+        "name": "13",
+        "friendly_name": "13",
+        "factory_name": "13"
+      },
+      "14": {
+        "number": 14,
+        "name": "14",
+        "friendly_name": "14",
+        "factory_name": "14"
+      },
+      "15": {
+        "number": 15,
+        "name": "15",
+        "friendly_name": "15",
+        "factory_name": "15"
+      },
+      "16": {
+        "number": 16,
+        "name": "16",
+        "friendly_name": "16",
+        "factory_name": "16"
+      },
+      "17": {
+        "number": 17,
+        "name": "17",
+        "friendly_name": "17",
+        "factory_name": "17"
+      },
+      "18": {
+        "number": 18,
+        "name": "18",
+        "friendly_name": "18",
+        "factory_name": "18"
+      },
+      "19": {
+        "number": 19,
+        "name": "19",
+        "friendly_name": "19",
+        "factory_name": "19"
+      },
+      "20": {
+        "number": 20,
+        "name": "20",
+        "friendly_name": "20",
+        "factory_name": "20"
+      },
+      "21": {
+        "number": 21,
+        "name": "21",
+        "friendly_name": "21",
+        "factory_name": "21"
+      },
+      "22": {
+        "number": 22,
+        "name": "22",
+        "friendly_name": "22",
+        "factory_name": "22"
+      },
+      "23": {
+        "number": 23,
+        "name": "23",
+        "friendly_name": "23",
+        "factory_name": "23"
+      },
+      "24": {
+        "number": 24,
+        "name": "24",
+        "friendly_name": "24",
+        "factory_name": "24"
+      },
+      "25": {
+        "number": 25,
+        "name": "25",
+        "friendly_name": "25",
+        "factory_name": "25"
+      },
+      "26": {
+        "number": 26,
+        "name": "26",
+        "friendly_name": "26",
+        "factory_name": "26"
+      },
+      "27": {
+        "number": 27,
+        "name": "27",
+        "friendly_name": "27",
+        "factory_name": "27"
+      },
+      "28": {
+        "number": 28,
+        "name": "28",
+        "friendly_name": "28",
+        "factory_name": "28"
+      },
+      "29": {
+        "number": 29,
+        "name": "29",
+        "friendly_name": "29",
+        "factory_name": "29"
+      },
+      "30": {
+        "number": 30,
+        "name": "30",
+        "friendly_name": "30",
+        "factory_name": "30"
+      },
+      "31": {
+        "number": 31,
+        "name": "31",
+        "friendly_name": "31",
+        "factory_name": "31"
+      },
+      "32": {
+        "number": 32,
+        "name": "32",
+        "friendly_name": "32",
+        "factory_name": "32"
+      },
+      "33": {
+        "number": 33,
+        "name": "33",
+        "friendly_name": "33",
+        "factory_name": "33"
+      },
+      "34": {
+        "number": 34,
+        "name": "34",
+        "friendly_name": "34",
+        "factory_name": "34"
+      },
+      "35": {
+        "number": 35,
+        "name": "35",
+        "friendly_name": "35",
+        "factory_name": "35"
+      },
+      "36": {
+        "number": 36,
+        "name": "36",
+        "friendly_name": "36",
+        "factory_name": "36"
+      },
+      "37": {
+        "number": 37,
+        "name": "37",
+        "friendly_name": "37",
+        "factory_name": "37"
+      },
+      "38": {
+        "number": 38,
+        "name": "38",
+        "friendly_name": "38",
+        "factory_name": "38"
+      },
+      "39": {
+        "number": 39,
+        "name": "39",
+        "friendly_name": "39",
+        "factory_name": "39"
+      },
+      "40": {
+        "number": 40,
+        "name": "40",
+        "friendly_name": "40",
+        "factory_name": "40"
+      },
+      "41": {
+        "number": 41,
+        "name": "41",
+        "friendly_name": "41",
+        "factory_name": "41"
+      },
+      "42": {
+        "number": 42,
+        "name": "42",
+        "friendly_name": "42",
+        "factory_name": "42"
+      },
+      "43": {
+        "number": 43,
+        "name": "43",
+        "friendly_name": "43",
+        "factory_name": "43"
+      },
+      "44": {
+        "number": 44,
+        "name": "44",
+        "friendly_name": "44",
+        "factory_name": "44"
+      },
+      "45": {
+        "number": 45,
+        "name": "45",
+        "friendly_name": "45",
+        "factory_name": "45"
+      },
+      "46": {
+        "number": 46,
+        "name": "46",
+        "friendly_name": "46",
+        "factory_name": "46"
+      },
+      "47": {
+        "number": 47,
+        "name": "47",
+        "friendly_name": "47",
+        "factory_name": "47"
+      },
+      "48": {
+        "number": 48,
+        "name": "48",
+        "friendly_name": "48",
+        "factory_name": "48"
+      },
+      "49": {
+        "number": 49,
+        "name": "49",
+        "friendly_name": "49",
+        "factory_name": "49"
+      },
+      "50": {
+        "number": 50,
+        "name": "50",
+        "friendly_name": "50",
+        "factory_name": "50"
+      },
+      "51": {
+        "number": 51,
+        "name": "51",
+        "friendly_name": "51",
+        "factory_name": "51"
+      },
+      "52": {
+        "number": 52,
+        "name": "52",
+        "friendly_name": "52",
+        "factory_name": "52"
+      },
+      "53": {
+        "number": 53,
+        "name": "53",
+        "friendly_name": "53",
+        "factory_name": "53"
+      },
+      "54": {
+        "number": 54,
+        "name": "54",
+        "friendly_name": "54",
+        "factory_name": "54"
+      },
+      "55": {
+        "number": 55,
+        "name": "55",
+        "friendly_name": "55",
+        "factory_name": "55"
+      },
+      "56": {
+        "number": 56,
+        "name": "56",
+        "friendly_name": "56",
+        "factory_name": "56"
+      },
+      "57": {
+        "number": 57,
+        "name": "57",
+        "friendly_name": "57",
+        "factory_name": "57"
+      },
+      "58": {
+        "number": 58,
+        "name": "58",
+        "friendly_name": "58",
+        "factory_name": "58"
+      },
+      "59": {
+        "number": 59,
+        "name": "59",
+        "friendly_name": "59",
+        "factory_name": "59"
+      },
+      "60": {
+        "number": 60,
+        "name": "60",
+        "friendly_name": "60",
+        "factory_name": "60"
+      },
+      "61": {
+        "number": 61,
+        "name": "61",
+        "friendly_name": "61",
+        "factory_name": "61"
+      },
+      "62": {
+        "number": 62,
+        "name": "62",
+        "friendly_name": "62",
+        "factory_name": "62"
+      },
+      "63": {
+        "number": 63,
+        "name": "63",
+        "friendly_name": "63",
+        "factory_name": "63"
+      },
+      "64": {
+        "number": 64,
+        "name": "64",
+        "friendly_name": "64",
+        "factory_name": "64"
+      }
+    },
+    "rx_channels": {
+      "01": {
+        "number": 1,
+        "name": "01",
+        "friendly_name": "01",
+        "factory_name": "01"
+      },
+      "02": {
+        "number": 2,
+        "name": "02",
+        "friendly_name": "02",
+        "factory_name": "02"
+      },
+      "03": {
+        "number": 3,
+        "name": "03",
+        "friendly_name": "03",
+        "factory_name": "03"
+      },
+      "04": {
+        "number": 4,
+        "name": "04",
+        "friendly_name": "04",
+        "factory_name": "04"
+      },
+      "05": {
+        "number": 5,
+        "name": "05",
+        "friendly_name": "05",
+        "factory_name": "05"
+      },
+      "06": {
+        "number": 6,
+        "name": "06",
+        "friendly_name": "06",
+        "factory_name": "06"
+      },
+      "07": {
+        "number": 7,
+        "name": "07",
+        "friendly_name": "07",
+        "factory_name": "07"
+      },
+      "08": {
+        "number": 8,
+        "name": "08",
+        "friendly_name": "08",
+        "factory_name": "08"
+      },
+      "09": {
+        "number": 9,
+        "name": "09",
+        "friendly_name": "09",
+        "factory_name": "09"
+      },
+      "10": {
+        "number": 10,
+        "name": "10",
+        "friendly_name": "10",
+        "factory_name": "10"
+      },
+      "11": {
+        "number": 11,
+        "name": "11",
+        "friendly_name": "11",
+        "factory_name": "11"
+      },
+      "12": {
+        "number": 12,
+        "name": "12",
+        "friendly_name": "12",
+        "factory_name": "12"
+      },
+      "13": {
+        "number": 13,
+        "name": "13",
+        "friendly_name": "13",
+        "factory_name": "13"
+      },
+      "14": {
+        "number": 14,
+        "name": "14",
+        "friendly_name": "14",
+        "factory_name": "14"
+      },
+      "15": {
+        "number": 15,
+        "name": "15",
+        "friendly_name": "15",
+        "factory_name": "15"
+      },
+      "16": {
+        "number": 16,
+        "name": "16",
+        "friendly_name": "16",
+        "factory_name": "16"
+      },
+      "17": {
+        "number": 17,
+        "name": "17",
+        "friendly_name": "17",
+        "factory_name": "17"
+      },
+      "18": {
+        "number": 18,
+        "name": "18",
+        "friendly_name": "18",
+        "factory_name": "18"
+      },
+      "19": {
+        "number": 19,
+        "name": "19",
+        "friendly_name": "19",
+        "factory_name": "19"
+      },
+      "20": {
+        "number": 20,
+        "name": "20",
+        "friendly_name": "20",
+        "factory_name": "20"
+      },
+      "21": {
+        "number": 21,
+        "name": "21",
+        "friendly_name": "21",
+        "factory_name": "21"
+      },
+      "22": {
+        "number": 22,
+        "name": "22",
+        "friendly_name": "22",
+        "factory_name": "22"
+      },
+      "23": {
+        "number": 23,
+        "name": "23",
+        "friendly_name": "23",
+        "factory_name": "23"
+      },
+      "24": {
+        "number": 24,
+        "name": "24",
+        "friendly_name": "24",
+        "factory_name": "24"
+      },
+      "25": {
+        "number": 25,
+        "name": "25",
+        "friendly_name": "25",
+        "factory_name": "25"
+      },
+      "26": {
+        "number": 26,
+        "name": "26",
+        "friendly_name": "26",
+        "factory_name": "26"
+      },
+      "27": {
+        "number": 27,
+        "name": "27",
+        "friendly_name": "27",
+        "factory_name": "27"
+      },
+      "28": {
+        "number": 28,
+        "name": "28",
+        "friendly_name": "28",
+        "factory_name": "28"
+      },
+      "29": {
+        "number": 29,
+        "name": "29",
+        "friendly_name": "29",
+        "factory_name": "29"
+      },
+      "30": {
+        "number": 30,
+        "name": "30",
+        "friendly_name": "30",
+        "factory_name": "30"
+      },
+      "31": {
+        "number": 31,
+        "name": "31",
+        "friendly_name": "31",
+        "factory_name": "31"
+      },
+      "32": {
+        "number": 32,
+        "name": "32",
+        "friendly_name": "32",
+        "factory_name": "32"
+      },
+      "33": {
+        "number": 33,
+        "name": "33",
+        "friendly_name": "33",
+        "factory_name": "33"
+      },
+      "34": {
+        "number": 34,
+        "name": "34",
+        "friendly_name": "34",
+        "factory_name": "34"
+      },
+      "35": {
+        "number": 35,
+        "name": "35",
+        "friendly_name": "35",
+        "factory_name": "35"
+      },
+      "36": {
+        "number": 36,
+        "name": "36",
+        "friendly_name": "36",
+        "factory_name": "36"
+      },
+      "37": {
+        "number": 37,
+        "name": "37",
+        "friendly_name": "37",
+        "factory_name": "37"
+      },
+      "38": {
+        "number": 38,
+        "name": "38",
+        "friendly_name": "38",
+        "factory_name": "38"
+      },
+      "39": {
+        "number": 39,
+        "name": "39",
+        "friendly_name": "39",
+        "factory_name": "39"
+      },
+      "40": {
+        "number": 40,
+        "name": "40",
+        "friendly_name": "40",
+        "factory_name": "40"
+      },
+      "41": {
+        "number": 41,
+        "name": "41",
+        "friendly_name": "41",
+        "factory_name": "41"
+      },
+      "42": {
+        "number": 42,
+        "name": "42",
+        "friendly_name": "42",
+        "factory_name": "42"
+      },
+      "43": {
+        "number": 43,
+        "name": "43",
+        "friendly_name": "43",
+        "factory_name": "43"
+      },
+      "44": {
+        "number": 44,
+        "name": "44",
+        "friendly_name": "44",
+        "factory_name": "44"
+      },
+      "45": {
+        "number": 45,
+        "name": "45",
+        "friendly_name": "45",
+        "factory_name": "45"
+      },
+      "46": {
+        "number": 46,
+        "name": "46",
+        "friendly_name": "46",
+        "factory_name": "46"
+      },
+      "47": {
+        "number": 47,
+        "name": "47",
+        "friendly_name": "47",
+        "factory_name": "47"
+      },
+      "48": {
+        "number": 48,
+        "name": "48",
+        "friendly_name": "48",
+        "factory_name": "48"
+      },
+      "49": {
+        "number": 49,
+        "name": "49",
+        "friendly_name": "49",
+        "factory_name": "49"
+      },
+      "50": {
+        "number": 50,
+        "name": "50",
+        "friendly_name": "50",
+        "factory_name": "50"
+      },
+      "51": {
+        "number": 51,
+        "name": "51",
+        "friendly_name": "51",
+        "factory_name": "51"
+      },
+      "52": {
+        "number": 52,
+        "name": "52",
+        "friendly_name": "52",
+        "factory_name": "52"
+      },
+      "53": {
+        "number": 53,
+        "name": "53",
+        "friendly_name": "53",
+        "factory_name": "53"
+      },
+      "54": {
+        "number": 54,
+        "name": "54",
+        "friendly_name": "54",
+        "factory_name": "54"
+      },
+      "55": {
+        "number": 55,
+        "name": "55",
+        "friendly_name": "55",
+        "factory_name": "55"
+      },
+      "56": {
+        "number": 56,
+        "name": "56",
+        "friendly_name": "56",
+        "factory_name": "56"
+      },
+      "57": {
+        "number": 57,
+        "name": "57",
+        "friendly_name": "57",
+        "factory_name": "57"
+      },
+      "58": {
+        "number": 58,
+        "name": "58",
+        "friendly_name": "58",
+        "factory_name": "58"
+      },
+      "59": {
+        "number": 59,
+        "name": "59",
+        "friendly_name": "59",
+        "factory_name": "59"
+      },
+      "60": {
+        "number": 60,
+        "name": "60",
+        "friendly_name": "60",
+        "factory_name": "60"
+      },
+      "61": {
+        "number": 61,
+        "name": "61",
+        "friendly_name": "61",
+        "factory_name": "61"
+      },
+      "62": {
+        "number": 62,
+        "name": "62",
+        "friendly_name": "62",
+        "factory_name": "62"
+      },
+      "63": {
+        "number": 63,
+        "name": "63",
+        "friendly_name": "63",
+        "factory_name": "63"
+      },
+      "64": {
+        "number": 64,
+        "name": "64",
+        "friendly_name": "64",
+        "factory_name": "64"
+      }
+    }
+  }
+}

@@ -1,0 +1,3458 @@
+[
+  {
+    "rx_channel": "01",
+    "rx_channel_number": 1,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "01",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "02",
+    "rx_channel_number": 2,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "02",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "03",
+    "rx_channel_number": 3,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "03",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "04",
+    "rx_channel_number": 4,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "04",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "05",
+    "rx_channel_number": 5,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "05",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "06",
+    "rx_channel_number": 6,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "06",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "07",
+    "rx_channel_number": 7,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "07",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "08",
+    "rx_channel_number": 8,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "08",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "09",
+    "rx_channel_number": 9,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "09",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "10",
+    "rx_channel_number": 10,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "10",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "11",
+    "rx_channel_number": 11,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "11",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "12",
+    "rx_channel_number": 12,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "12",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "13",
+    "rx_channel_number": 13,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "13",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "14",
+    "rx_channel_number": 14,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "14",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "15",
+    "rx_channel_number": 15,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "15",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "16",
+    "rx_channel_number": 16,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "16",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "17",
+    "rx_channel_number": 17,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "17",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "18",
+    "rx_channel_number": 18,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "18",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "19",
+    "rx_channel_number": 19,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "19",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "20",
+    "rx_channel_number": 20,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "20",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "21",
+    "rx_channel_number": 21,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "21",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "22",
+    "rx_channel_number": 22,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "22",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "23",
+    "rx_channel_number": 23,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "23",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "24",
+    "rx_channel_number": 24,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "24",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "25",
+    "rx_channel_number": 25,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "25",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "26",
+    "rx_channel_number": 26,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "26",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "27",
+    "rx_channel_number": 27,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "27",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "28",
+    "rx_channel_number": 28,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "28",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "29",
+    "rx_channel_number": 29,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "29",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "30",
+    "rx_channel_number": 30,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "30",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "31",
+    "rx_channel_number": 31,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "31",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "32",
+    "rx_channel_number": 32,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "32",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "33",
+    "rx_channel_number": 33,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "33",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "34",
+    "rx_channel_number": 34,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "34",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "35",
+    "rx_channel_number": 35,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "35",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "36",
+    "rx_channel_number": 36,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "36",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "37",
+    "rx_channel_number": 37,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "37",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "38",
+    "rx_channel_number": 38,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "38",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "39",
+    "rx_channel_number": 39,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "39",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "40",
+    "rx_channel_number": 40,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "40",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "41",
+    "rx_channel_number": 41,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "41",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "42",
+    "rx_channel_number": 42,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "42",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "43",
+    "rx_channel_number": 43,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "43",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "44",
+    "rx_channel_number": 44,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "44",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "45",
+    "rx_channel_number": 45,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "45",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "46",
+    "rx_channel_number": 46,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "46",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "47",
+    "rx_channel_number": 47,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "47",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "48",
+    "rx_channel_number": 48,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "48",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "49",
+    "rx_channel_number": 49,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "49",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "50",
+    "rx_channel_number": 50,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "50",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "51",
+    "rx_channel_number": 51,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "51",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "52",
+    "rx_channel_number": 52,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "52",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "53",
+    "rx_channel_number": 53,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "53",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "54",
+    "rx_channel_number": 54,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "54",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "55",
+    "rx_channel_number": 55,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "55",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "56",
+    "rx_channel_number": 56,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "56",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "57",
+    "rx_channel_number": 57,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "57",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "58",
+    "rx_channel_number": 58,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "58",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "59",
+    "rx_channel_number": 59,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "59",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "60",
+    "rx_channel_number": 60,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "60",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "61",
+    "rx_channel_number": 61,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "61",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "62",
+    "rx_channel_number": 62,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "62",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "63",
+    "rx_channel_number": 63,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "63",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "64",
+    "rx_channel_number": 64,
+    "rx_device": "WingCompact",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "64",
+    "tx_device": "WingRack",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "01",
+    "rx_channel_number": 1,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "01",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "02",
+    "rx_channel_number": 2,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "02",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "03",
+    "rx_channel_number": 3,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "03",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "04",
+    "rx_channel_number": 4,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "04",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "05",
+    "rx_channel_number": 5,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "05",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "06",
+    "rx_channel_number": 6,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "06",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "07",
+    "rx_channel_number": 7,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "07",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "08",
+    "rx_channel_number": 8,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "08",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "09",
+    "rx_channel_number": 9,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "09",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "10",
+    "rx_channel_number": 10,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "10",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "11",
+    "rx_channel_number": 11,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "11",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "12",
+    "rx_channel_number": 12,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "12",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "13",
+    "rx_channel_number": 13,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "13",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "14",
+    "rx_channel_number": 14,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "14",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "15",
+    "rx_channel_number": 15,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "15",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "16",
+    "rx_channel_number": 16,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "16",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "17",
+    "rx_channel_number": 17,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "17",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "18",
+    "rx_channel_number": 18,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "18",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "19",
+    "rx_channel_number": 19,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "19",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "20",
+    "rx_channel_number": 20,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "20",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "21",
+    "rx_channel_number": 21,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "21",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "22",
+    "rx_channel_number": 22,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "22",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "23",
+    "rx_channel_number": 23,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "23",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "24",
+    "rx_channel_number": 24,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "24",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "25",
+    "rx_channel_number": 25,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "25",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "26",
+    "rx_channel_number": 26,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "26",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "27",
+    "rx_channel_number": 27,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "27",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "28",
+    "rx_channel_number": 28,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "28",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "29",
+    "rx_channel_number": 29,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "29",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "30",
+    "rx_channel_number": 30,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "30",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "31",
+    "rx_channel_number": 31,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "31",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "32",
+    "rx_channel_number": 32,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "32",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "33",
+    "rx_channel_number": 33,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "33",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "34",
+    "rx_channel_number": 34,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "34",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "35",
+    "rx_channel_number": 35,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "35",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "36",
+    "rx_channel_number": 36,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "36",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "37",
+    "rx_channel_number": 37,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "37",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "38",
+    "rx_channel_number": 38,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "38",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "39",
+    "rx_channel_number": 39,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "39",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "40",
+    "rx_channel_number": 40,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "40",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "41",
+    "rx_channel_number": 41,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "41",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "42",
+    "rx_channel_number": 42,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "42",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "43",
+    "rx_channel_number": 43,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "43",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "44",
+    "rx_channel_number": 44,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "44",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "45",
+    "rx_channel_number": 45,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "45",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "46",
+    "rx_channel_number": 46,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "46",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "47",
+    "rx_channel_number": 47,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "47",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "48",
+    "rx_channel_number": 48,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "48",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "49",
+    "rx_channel_number": 49,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "49",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "50",
+    "rx_channel_number": 50,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "50",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "51",
+    "rx_channel_number": 51,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "51",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "52",
+    "rx_channel_number": 52,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "52",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "53",
+    "rx_channel_number": 53,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "53",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "54",
+    "rx_channel_number": 54,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "54",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "55",
+    "rx_channel_number": 55,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "55",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "56",
+    "rx_channel_number": 56,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "56",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "57",
+    "rx_channel_number": 57,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "57",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "58",
+    "rx_channel_number": 58,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "58",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "59",
+    "rx_channel_number": 59,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "59",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "60",
+    "rx_channel_number": 60,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "60",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "61",
+    "rx_channel_number": 61,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "61",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "62",
+    "rx_channel_number": 62,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "62",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "63",
+    "rx_channel_number": 63,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "63",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  },
+  {
+    "rx_channel": "64",
+    "rx_channel_number": 64,
+    "rx_device": "WingRack",
+    "status": {
+      "transport": "unicast",
+      "code": 9,
+      "receiver_status_code": 257,
+      "status": "DYNAMIC",
+      "state": "connected",
+      "severity": "ok",
+      "settled": true,
+      "label": "Subscribed (unicast)",
+      "detail": "Active subscription to an automatically configured source flow",
+      "observed_summary": "CONNECTED",
+      "interpretation": "observed",
+      "icon": "\u001b[32m\u25cf\u001b[0m"
+    },
+    "tx_channel": "64",
+    "tx_device": "WingCompact",
+    "rx_channel_status": {
+      "code": 257,
+      "detail": null,
+      "label": "Unknown receiver status",
+      "state": "uncharacterized"
+    }
+  }
+]
