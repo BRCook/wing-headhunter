@@ -4,6 +4,9 @@ Remote preamp control for Behringer Wing consoles connected over Dante.
 
 > **Status:** early development. Source naming, gain mode, phantom power and the gain display all work, and have been tested on my Rack and Compact (see [Tested Hardware](#tested-hardware)). There is no web interface yet, so everything must be done from the command line.
 
+> [!NOTE]
+> This project is AI-assisted. 
+
 ## Why This Exists
 
 Mixing monitors from front-of-house is commonplace these days, especially among us "weekend warriors". The Wing supports remote preamp control over AES50, but not over Dante. If your monitor console feeds your FOH console over Dante, there is no way to adjust stage preamps from FOH; you either walk to the stage, or you have a monitor engineer who does it for you.
