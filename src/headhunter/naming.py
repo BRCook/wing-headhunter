@@ -19,6 +19,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from headhunter.dante import Subscription, read_subscriptions
+from headhunter.gain import USER_ENTRIES, USER_SIGNALS, is_mono, mono_switch_paths, user_entry
 from headhunter.consoles import locate
 from headhunter.native import NativeClient, Value
 from headhunter.store import Pairing, Store
@@ -54,17 +55,26 @@ TAG = "HH"
 STRIPS = {"ch": 40, "aux": 8}
 
 
-def source_name(display_name: str, group: str, number: int) -> str:
-    """The name for a Dante input fed by `group` `number` on another console."""
+def source_name(display_name: str, group: str, number: int, mode=None, stereo: bool = False, mono: bool = False) -> str:
+    """The name for a Dante input fed by `group` `number` on another console.
+
+    mode is a user signal or patch's mode (M or ST), which decides whether it is named as
+    one side of a stereo pair. stereo means the Dante input is the left half of a stereo
+    pair on the receiving console: any L or R is dropped, and S added. mono means a bus,
+    main or matrix has been switched to mono, so its entries are named without a side.
+    """
     if group == "OFF":
-        name = f"{display_name}-OFF-{TAG}"
+        return f"{display_name}-OFF-{TAG}"
+    side = ""
+    if group == "USR":
+        kind, index, side = user_entry(number, mode)
+        label = f"{kind}{index:02d}"
+    elif group in STEREO_GROUPS:
+        side = "" if mono else "L" if number % 2 else "R"
+        label = f"{ABBREVIATIONS[group]}{(number + 1) // 2:02d}"
     else:
-        abbreviation = ABBREVIATIONS.get(group, "??")
-        if group in STEREO_GROUPS:
-            side = "L" if number % 2 else "R"
-            name = f"{display_name}-{abbreviation}{(number + 1) // 2:02d}{side}-{TAG}"
-        else:
-            name = f"{display_name}-{abbreviation}{number:02d}-{TAG}"
+        label = f"{ABBREVIATIONS.get(group, '??')}{number:02d}"
+    name = f"{display_name}-{label}{'S' if stereo else side}-{TAG}"
     if len(name) > NAME_MAX:
         raise ValueError(f"Source name {name!r} is longer than {NAME_MAX} characters")
     return name
@@ -79,10 +89,15 @@ class PlannedName:
     current: str
     planned: str
     linked: tuple[str, ...] = ()  # Channels with customization linked to this input
+    paired_with: int | None = None  # The left input of a stereo pair this (right) input belongs to
+
+    @property
+    def skipped(self) -> bool:
+        return bool(self.linked) or self.paired_with is not None
 
     @property
     def needs_writing(self) -> bool:
-        return not self.linked and self.current != self.planned
+        return not self.skipped and self.current != self.planned
 
 
 DANTE_INPUTS = 64
@@ -95,13 +110,34 @@ def foh_paths() -> list[str]:
     for kind, count in STRIPS.items():
         for n in range(1, count + 1):
             paths += [f"{kind}.{n}.clink"] + [f"{kind}.{n}.in.conn.{leaf}" for leaf in ("grp", "in", "altgrp", "altin")]
-    paths += [f"io.in.MOD.{n}.name" for n in range(1, DANTE_INPUTS + 1)]
+    paths += [f"io.in.MOD.{n}.{leaf}" for n in range(1, DANTE_INPUTS + 1) for leaf in ("name", "mode")]
     return paths
 
 
+STEREO_MODES = ("ST", "M/S")
+
+
+def stereo_rights(state: State) -> dict[int, int]:
+    """Dante inputs that are the right half of a stereo pair, mapped to their left input.
+
+    A stereo channel makes its Dante input stereo, linking an odd input with the next one;
+    the pair then has a single, shared name.
+    """
+    return {
+        n + 1: n
+        for n in range(1, DANTE_INPUTS, 2)
+        if state.get(f"io.in.MOD.{n}.mode") in STEREO_MODES
+    }
+
+
 def stage_paths() -> list[str]:
-    """Every parameter naming needs from a stage console."""
-    return [f"io.out.MOD.{n}.{leaf}" for n in range(1, DANTE_INPUTS + 1) for leaf in ("grp", "in")]
+    """Every parameter naming (and gain mode) needs from a stage console: its Dante output
+    routing, and its user signals and patches."""
+    paths = [f"io.out.MOD.{n}.{leaf}" for n in range(1, DANTE_INPUTS + 1) for leaf in ("grp", "in")]
+    paths += [f"io.in.USR.{n}.mode" for n in range(1, USER_ENTRIES + 1)]
+    paths += [f"io.in.USR.{n}.user.{leaf}" for n in range(USER_SIGNALS + 1, USER_ENTRIES + 1) for leaf in ("grp", "in")]
+    paths += mono_switch_paths()
+    return paths
 
 
 def paths_for(pairing: Pairing) -> list[str]:
@@ -147,6 +183,7 @@ def plan_from_state(
             continue
         rx_state = states[receiver.console_mac]
         linked = linked_from_state(rx_state)
+        rights = stereo_rights(rx_state)
         for sub in subscriptions:
             if sub.rx_device != receiver.dante_name or not sub.connected:
                 continue
@@ -163,8 +200,13 @@ def plan_from_state(
                     receiver,
                     sub.rx_channel,
                     str(rx_state.get(f"io.in.MOD.{sub.rx_channel}.name", "")),
-                    source_name(sender.display_name, str(group), int(number)),
+                    source_name(
+                        sender.display_name, str(group), int(number), tx_state.get(f"io.in.USR.{number}.mode"),
+                        stereo=sub.rx_channel in rights.values(),
+                        mono=is_mono(group, number, tx_state),
+                    ),
                     tuple(linked.get(sub.rx_channel, ())),
+                    rights.get(sub.rx_channel),
                 )
             )
     return plans
@@ -239,12 +281,15 @@ async def run(write: bool) -> None:
     for receiver in (p for p in pairings if p.is_foh):
         rows = sorted((p for p in plans if p.console is receiver), key=lambda p: p.dante_input)
         changes = sum(p.needs_writing for p in rows)
-        skipped = sum(bool(p.linked) for p in rows)
+        skipped = sum(p.skipped for p in rows)
         verb = "changed" if write else "would change"
         print(f"{receiver.display_name}: {len(rows)} Dante inputs from paired consoles, "
               f"{changes} {verb}, {skipped} skipped")
         for plan in rows:
-            if plan.linked:
+            if plan.paired_with is not None:
+                note = f"  not named: stereo with MOD {plan.paired_with}"
+                marker = "  "
+            elif plan.linked:
                 note = f"  skipped: customization linked on {', '.join(plan.linked)}"
                 marker = "  "
             else:

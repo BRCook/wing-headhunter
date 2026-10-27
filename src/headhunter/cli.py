@@ -176,7 +176,7 @@ def settings(args: argparse.Namespace) -> None:
 
 def run(args: argparse.Namespace) -> None:
     with contextlib.suppress(KeyboardInterrupt):
-        asyncio.run(run_engine(args.write_names, args.write_gain, args.restore_after, args.stats))
+        asyncio.run(run_engine(args.write_names, args.write_gain, args.restore_after, args.stats, args.port))
 
 
 def main() -> None:
@@ -221,6 +221,7 @@ def main() -> None:
     run_parser = commands.add_parser("run", help="Keep running, and keep names up to date as things change")
     run_parser.add_argument("--write-names", action="store_const", const=True, help="Write names, whatever the write_names setting says")
     run_parser.add_argument("--write-gain", action="store_const", const=True, help="Change gain, whatever the write_gain setting says")
+    run_parser.add_argument("--port", type=int, help="Port for the status page, whatever the web_port setting says")
     run_parser.add_argument("--stats", type=float, metavar="MINUTES", help="Log memory and resource use every few minutes")
     run_parser.add_argument("--restore-after", type=float, metavar="SECONDS", help="How long trim must be still before it is restored")
     run_parser.set_defaults(func=run)

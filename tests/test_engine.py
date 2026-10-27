@@ -1088,3 +1088,190 @@ def test_renaming_a_whole_console_is_summed_up_in_one_line(network, caplog):
             await compact.stop()
 
     asyncio.run(scenario())
+
+
+def test_status_describes_what_the_page_shows(network):
+    foh = Pairing(**{**COMPACT.__dict__, "gain_gpio": 3, "phantom_gpio": 4})
+
+    async def scenario():
+        rack, compact = stage_box_setup(foh)
+        rack.values["io.in.A.8.vph"] = 1
+        await rack.start()
+        await compact.start()
+        running = engine.Engine([RACK, foh], ports={"rack-mac": rack.port, "compact-mac": compact.port})
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: (t := running.targets.get("compact-mac")) and t.preamp is not None)
+            status = running.status()
+            compact_status = next(c for c in status["consoles"] if c["name"] == "COMPACT")
+            assert compact_status["connected"] and compact_status["ip"] == "127.0.0.1"
+            assert (compact_status["gain_button"], compact_status["phantom_button"]) == ("C", "D")
+            assert compact_status["gain_mode"] is False
+            assert compact_status["selected"] == {
+                "strip": "Channel 13", "stereo": False,
+                "sides": [{"side": "", "source": "RACK AES50 A 8", "through": None, "gain": 0.5, "phantom": True}],
+            }
+            assert status["writing"] == {"names": False, "gain": False}
+
+            compact.push("$ctl.$stat.selidx", 5)  # No source
+            await wait_for(lambda: running.status()["consoles"][1]["selected"].get("reason") == "It has no source.")
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())
+
+
+def stereo_setup(foh):
+    """Channel 13 on a stereo pair of Dante inputs (37 and 38), fed by a local input with 2.5 dB
+    steps on the left and an AES50 input with 0.5 dB steps on the right."""
+    rack = FakeWing(
+        {
+            **defaults(RACK),
+            "io.out.MOD.37.grp": "LCL", "io.out.MOD.37.in": 1, "io.in.LCL.1.g": 10.0,
+            "io.out.MOD.38.grp": "A", "io.out.MOD.38.in": 8, "io.in.A.8.g": 20.0,
+            "$stat.A.stat": "OK", "$stat.A.dev": "DL16",
+        },
+        ranges={"io.in.LCL.1.g": (-2.5, 45.0, 20), "io.in.A.8.g": (-3.0, 45.5, 98)},
+    )
+    compact = FakeWing({
+        **defaults(foh), "ch.13.in.conn.grp": "MOD", "ch.13.in.conn.in": 37, "ch.13.in.set.trim": 0.0,
+        "io.in.MOD.37.mode": "ST", "$ctl.$stat.selidx": 13, "ch.13.name": "OH",
+    })
+    return rack, compact
+
+
+def test_a_stereo_channel_adjusts_both_preamps(network, quick_flashes, quick_display):
+    foh = Pairing(**{**COMPACT.__dict__, "gain_gpio": 3, "phantom_gpio": 4})
+
+    async def scenario():
+        rack, compact = stereo_setup(foh)
+        await rack.start()
+        await compact.start()
+        running = engine.Engine(
+            [RACK, foh], ports={"rack-mac": rack.port, "compact-mac": compact.port}, write_gain=True, restore_after=30
+        )
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: (t := running.targets.get("compact-mac")) and len(t.preamps) == 2)
+            compact.push("$ctl.gpio.3.gpstate", 1)
+            await wait_for(lambda: running.gain_mode["compact-mac"])
+
+            # 2.6 dB of trim: one 2.5 dB step on the left, five 0.5 dB steps on the right
+            compact.push("ch.13.in.set.trim", 2.6)
+            await wait_for(lambda: rack.values["io.in.LCL.1.g"] == 12.5 and rack.values["io.in.A.8.g"] == 22.5)
+            await wait_for(lambda: compact.values["ch.13.name"] == "12.5/22.5dB")
+
+            # 1.4 dB more: not a step on the left, but two and a half on the right
+            compact.push("ch.13.in.set.trim", 4.0)
+            await wait_for(lambda: rack.values["io.in.A.8.g"] == 24.0)
+            assert rack.values["io.in.LCL.1.g"] == 12.5
+
+            # Phantom power, off on both: one hold turns both on
+            compact.push("$ctl.gpio.4.gpstate", 1)
+            await wait_for(lambda: rack.values["io.in.LCL.1.vph"] == 1 and rack.values["io.in.A.8.vph"] == 1)
+
+            status = next(c for c in running.status()["consoles"] if c["name"] == "COMPACT")["selected"]
+            assert status["stereo"] and [s["side"] for s in status["sides"]] == ["Left", "Right"]
+            assert [s["source"] for s in status["sides"]] == ["RACK Local 1", "RACK AES50 A 8"]
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())
+
+
+def test_phantom_on_one_side_of_a_stereo_channel_turns_both_on(network, quick_flashes):
+    foh = Pairing(**{**COMPACT.__dict__, "gain_gpio": 3, "phantom_gpio": 4})
+
+    async def scenario():
+        rack, compact = stereo_setup(foh)
+        rack.values["io.in.A.8.vph"] = 1  # Already on, on the right only
+        await rack.start()
+        await compact.start()
+        running = engine.Engine([RACK, foh], ports={"rack-mac": rack.port, "compact-mac": compact.port}, write_gain=True)
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: (t := running.targets.get("compact-mac")) and len(t.preamps) == 2)
+            compact.push("$ctl.gpio.3.gpstate", 1)
+            await wait_for(lambda: running.gain_mode["compact-mac"])
+            compact.push("$ctl.gpio.4.gpstate", 1)
+            await wait_for(lambda: rack.values["io.in.LCL.1.vph"] == 1)
+            assert rack.values["io.in.A.8.vph"] == 1
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())
+
+
+def test_phantom_power_can_be_switched_back_during_its_flash(network, monkeypatch):
+    """A slip of the finger must be undoable at once: pressing the button stops its flash."""
+    from headhunter import buttons
+
+    monkeypatch.setattr(engine, "PHANTOM_HOLD_SECONDS", 0.3)
+    monkeypatch.setattr(buttons, "FLASH_PATTERNS", {"on": [(0.3, 0.3)] * 5, "off": [(0.3, 0.3)] * 3})  # Three seconds
+    foh = Pairing(**{**COMPACT.__dict__, "gain_gpio": 3, "phantom_gpio": 4})
+
+    async def scenario():
+        rack, compact = stage_box_setup(foh)
+        await rack.start()
+        await compact.start()
+        running = engine.Engine([RACK, foh], ports={"rack-mac": rack.port, "compact-mac": compact.port}, write_gain=True)
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: (t := running.targets.get("compact-mac")) and t.preamp is not None)
+            compact.push("$ctl.gpio.3.gpstate", 1)
+            await wait_for(lambda: running.gain_mode["compact-mac"])
+
+            compact.push("$ctl.gpio.4.gpstate", 1)  # Oops: hold, 48V on, and the flash starts
+            await wait_for(lambda: rack.values["io.in.A.8.vph"] == 1)
+            compact.push("$ctl.gpio.4.gpstate", 0)
+            await asyncio.sleep(0.2)
+
+            compact.push("$ctl.gpio.4.gpstate", 1)  # Straight back, while it is still flashing
+            await wait_for(lambda: rack.values["io.in.A.8.vph"] == 0, timeout=1.5)
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())
+
+
+def test_a_press_after_an_unreported_release_still_counts(network, quick_flashes):
+    """While the button flashes under a finger, the console may never report it being let go.
+    The next press must still count, even though Headhunter thinks it is already pressed."""
+    foh = Pairing(**{**COMPACT.__dict__, "gain_gpio": 3, "phantom_gpio": 4})
+
+    async def scenario():
+        rack, compact = stage_box_setup(foh)
+        await rack.start()
+        await compact.start()
+        running = engine.Engine([RACK, foh], ports={"rack-mac": rack.port, "compact-mac": compact.port}, write_gain=True)
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: (t := running.targets.get("compact-mac")) and t.preamp is not None)
+            compact.push("$ctl.gpio.3.gpstate", 1)
+            await wait_for(lambda: running.gain_mode["compact-mac"])
+
+            compact.push("$ctl.gpio.4.gpstate", 1)
+            await wait_for(lambda: rack.values["io.in.A.8.vph"] == 1)
+            await asyncio.sleep(0.3)  # Let go during the flash; the console never says so
+
+            compact.push("$ctl.gpio.4.gpstate", 1)  # The next press
+            await wait_for(lambda: rack.values["io.in.A.8.vph"] == 0)
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())

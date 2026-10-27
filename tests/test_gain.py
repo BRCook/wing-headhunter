@@ -187,3 +187,138 @@ def test_bad_gpio_names(name):
 
     with pytest.raises(ValueError):
         gpio_number(name)
+
+
+@pytest.mark.parametrize(
+    "number, explanation",
+    [
+        (3, "Its source is USB 3, not a Dante input."),
+        (4, "RACK Dante output 7 carries Bus 1 left, which has no preamp."),
+        (5, "Nothing is connected to RACK AES50 B."),
+    ],
+)
+def test_explanations_for_the_status_page(subscriptions, number, explanation):
+    assert target(number, subscriptions).explanation == explanation
+
+
+def test_full_names():
+    from headhunter.gain import source_full_label, strip_full_label
+
+    assert target_full_label() == "RACK Local 24"
+    assert strip_full_label("CH 13") == "Channel 13"
+    assert strip_full_label("AUX 2") == "Aux 2"
+    assert strip_full_label("MTX 8") == "Matrix 8"
+    assert source_full_label("BUS", 2) == "Bus 1 right"
+    assert source_full_label("SEND", 5) == "FX send 3 left"
+
+
+def target_full_label():
+    import json
+
+    subs = parse_subscriptions(
+        json.loads((FIXTURES / "subscriptions.json").read_text()),
+        json.loads((FIXTURES / "channels.json").read_text()),
+    )
+    return target(1, subs).preamp.full_label
+
+
+def patched(**patches):
+    """States where RACK Dante output 6 (channel 2's alt source) carries user patch entry 25."""
+    rack = {"io.out.MOD.6.grp": "USR", "io.out.MOD.6.in": 25, **patches}
+    return states(rack=rack)
+
+
+def test_a_user_patch_is_followed_to_its_preamp(subscriptions):
+    result = target(2, subscriptions, patched(**{
+        "io.in.USR.25.mode": "ST", "io.in.USR.25.user.grp": "LCL", "io.in.USR.25.user.in": 24,
+    }))
+    assert result.preamp.label == "RACK L24"
+    assert result.through == "user patch 1 left"
+
+
+@pytest.mark.parametrize(
+    "patch, reason, explanation",
+    [
+        ({"io.in.USR.25.mode": "M", "io.in.USR.25.user.grp": "USB", "io.in.USR.25.user.in": 3},
+         "RACK out 6 via UP 1 is USB 3",
+         "RACK Dante output 6, through user patch 1, carries USB 3, which has no preamp."),
+        ({"io.in.USR.25.mode": "M", "io.in.USR.25.user.grp": "OFF", "io.in.USR.25.user.in": 1},
+         "RACK out 6 via UP 1, empty",
+         "User patch 1 has no source."),
+    ],
+)
+def test_user_patches_without_a_preamp(subscriptions, patch, reason, explanation):
+    result = target(2, subscriptions, patched(**patch))
+    assert (result.preamp, result.reason, result.explanation) == (None, reason, explanation)
+
+
+def test_user_signals_have_no_preamp(subscriptions):
+    all_states = states(rack={"io.out.MOD.6.grp": "USR", "io.out.MOD.6.in": 3, "io.in.USR.3.mode": "M"})
+    result = target(2, subscriptions, all_states)
+    assert result.preamp is None
+    assert result.explanation == "RACK Dante output 6 carries User signal 3, which has no preamp."
+
+
+@pytest.mark.parametrize("source, expected", [(37, [37, 38]), (38, [37, 38]), (39, [39])])
+def test_stereo_strips_take_both_inputs(source, expected):
+    from headhunter.gain import strip_inputs
+
+    assert strip_inputs(source, {"io.in.MOD.37.mode": "ST", "io.in.MOD.39.mode": "M"}) == expected
+
+
+def test_a_stereo_strip_follows_both_inputs(subscriptions):
+    both = states(
+        compact={"ch.1.in.conn.in": 5, "io.in.MOD.5.mode": "ST"},
+        rack={"io.out.MOD.6.grp": "A", "io.out.MOD.6.in": 3, "io.in.A.3.g": 0.5, "$stat.A.stat": "OK"},
+    )
+    result = target(1, subscriptions, both)
+    assert [p.label for p in result.preamps] == ["RACK L24", "RACK A3"]
+    assert len(result.halves) == 2
+
+
+def test_a_stereo_strip_with_one_preamp(subscriptions):
+    half = states(compact={"ch.1.in.conn.in": 5, "io.in.MOD.5.mode": "ST"},
+                  rack={"io.out.MOD.6.grp": "USB", "io.out.MOD.6.in": 3})
+    result = target(1, subscriptions, half)
+    assert [p.label for p in result.preamps] == ["RACK L24"]
+    assert result.halves[1].explanation == "RACK Dante output 6 carries USB 3, which has no preamp."
+
+
+@pytest.mark.parametrize(
+    "levels, phantoms, text",
+    [
+        ([12.5, 12.5], [0, 0], "12.5dB"),
+        ([12.5, 15.0], [0, 0], "12.5/15.0dB"),
+        ([12.5, 15.0], [1, 1], "12.5/15.0 !48V!"),
+        ([12.5, 12.5], [1, 0], "12.5dB ! 48V L !"),
+        ([-2.0, 45.5], [0, 1], "-2.0/45.5 !48VR!"),
+    ],
+)
+def test_stereo_display_text(levels, phantoms, text):
+    from headhunter.gain import display_text
+
+    assert display_text(levels, phantoms) == text
+    assert len(text) <= 16
+
+
+def test_sides_without_a_preamp_say_what_is_there(subscriptions):
+    half = states(compact={"ch.1.in.conn.in": 5, "io.in.MOD.5.mode": "ST"},
+                  rack={"io.out.MOD.6.grp": "AUX", "io.out.MOD.6.in": 1})
+    right = target(1, subscriptions, half).halves[1]
+    assert (right.source, right.problem) == ("RACK Aux 1", "no preamp")
+
+
+def test_a_user_patch_without_a_preamp_names_the_patch(subscriptions):
+    result = target(2, subscriptions, patched(**{
+        "io.in.USR.25.mode": "ST", "io.in.USR.25.user.grp": "AUX", "io.in.USR.25.user.in": 1,
+    }))
+    assert (result.halves[0].source, result.halves[0].through, result.halves[0].problem) == (
+        "RACK Aux 1", "user patch 1 left", "no preamp",
+    )
+
+
+def test_a_mono_bus_is_named_without_a_side(subscriptions):
+    mono = states(rack={"io.out.MOD.7.grp": "BUS", "io.out.MOD.7.in": 2, "bus.1.busmono": 1})
+    result = target(4, subscriptions, mono)
+    assert result.reason == "RACK out 7 is BUS 1"
+    assert result.halves[0].source == "RACK Bus 1"

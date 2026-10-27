@@ -2,7 +2,7 @@
 
 Remote preamp control for Behringer Wing consoles connected over Dante.
 
-> **Status:** early development. Source naming, gain mode, phantom power and the gain display all work, and have been tested on my Rack and Compact (see [Tested Hardware](#tested-hardware)). There is no web interface yet, so everything must be done from the command line.
+> **Status:** early development. Source naming, gain mode, phantom power and the gain display all work, and have been tested on my Rack and Compact (see [Tested Hardware](#tested-hardware)). There is a live [status page](#status-page); setup is still done from the command line.
 
 > [!NOTE]
 > This project is AI-assisted. 
@@ -72,8 +72,8 @@ Pairings are permanent, and are kept in a small SQLite database at `~/.local/sha
 | `dante_name`     | `WingRack`          | mDNS                       |
 | `display_name`   | `RACK`              | You (7 characters max)     |
 | `role`           | `STAGE`             | You (`FOH` or `STAGE`)     |
-| `gain_gpio`      | `3`                 | You (FOH consoles only)    |
-| `phantom_gpio`   | `4`                 | You (FOH consoles only)    |
+| `gain_gpio`      | `3` (GPIO C)        | You (FOH consoles only)    |
+| `phantom_gpio`   | `4` (GPIO D)        | You (FOH consoles only)    |
 
 A few rules apply:
 
@@ -101,6 +101,12 @@ sudo ufw allow proto udp from <your subnet> port 2222 comment 'Wing discovery re
 
 mDNS (UDP port 5353) must also be allowed, which it usually already is if Dante Controller works on the same machine, but it's worth checking.
 
+To open the [status page](#status-page) from another device, allow its port too:
+
+```sh
+sudo ufw allow proto tcp from <your subnet> to any port 8048 comment 'Headhunter status page'
+```
+
 ## Getting Started
 
 Headhunter needs Python 3.13 or newer. Install it into a virtual environment:
@@ -109,7 +115,7 @@ Headhunter needs Python 3.13 or newer. Install it into a virtual environment:
 git clone https://github.com/BRCook/wing-headhunter.git
 cd wing-headhunter
 python -m venv .venv
-source .venv/bin/activate    # .venv/bin/activate.fish in fish
+source .venv/bin/activate
 pip install -e .
 ```
 
@@ -132,10 +138,23 @@ headhunter run --write-names --write-gain
 
 Headhunter is careful by default. You must set `headhunter settings write_names on` and `headhunter settings write_gain on` before Headhunter will manipulate anything on your console. These changes are permanent; to only allow changes for a single run, use `headhunter run --write-names --write-gain`.
 
-A few more options:
+`headhunter settings` on its own lists every setting:
 
-- `--restore-after SECONDS` changes how long trim must be still before it is restored (see [Gain Mode](#2-gain-mode)).
-- `--stats MINUTES` logs Headhunter's memory and resource use every few minutes.
+| Setting         | Default | Meaning                                                        |
+|-----------------|---------|----------------------------------------------------------------|
+| `write_names`   | `off`   | Rename Dante sources on Console A                              |
+| `write_gain`    | `off`   | Change gain, phantom power and trim in gain mode               |
+| `restore_after` | `2`     | Seconds trim must be still before it is restored               |
+| `stats_minutes` | `0`     | Log memory and resource use every few minutes; `0` is off      |
+| `web_port`      | `8048`  | Port for the status page                                       |
+
+`headhunter run` accepts `--restore-after`, `--stats` and `--port` to override these for a single run.
+
+Changes made with `headhunter` commands – settings, pairings, roles, buttons and names – take effect in a running Headhunter within a few seconds; there is no need to restart it.
+
+## Status Page
+
+While Headhunter runs, it serves a status page at `http://<headhunter's address>:8048`. It shows each paired console, whether gain mode is on, what the trim knob on the selected channel controls, and a live log.
 
 ## How It Works
 
@@ -166,38 +185,43 @@ Source names on the Wing are limited to 16 characters. Every name follows the fo
 
 where `<DEVICE>` is the name of the remote console in Headhunter, `<TYPE>` is one or two letters from the table below, and `<NN>` is the two-digit channel number.
 
-Buses, mains, matrices, FX sends and monitors are stereo, and a Wing routes each side separately; input 1 of the bus group is bus 1 left, input 2 is bus 1 right, and so on. For these, `<NN>` is the actual bus (or main, or matrix…) number, and `<SIDE>` is `L` or `R`; so bus 1 right is `RACK-BS01R-HH`, not `RACK-BS02-HH`. Everything else is mono, and has no `<SIDE>`.
+Buses, mains, matrices, FX sends and monitors are stereo, but each side can be routed separately with Dante; input 1 of the bus group is bus 1 left, input 2 is bus 1 right, and so on. For these, `<NN>` is the actual bus (or main, or matrix…) number, and `<SIDE>` is `L` or `R`; so bus 1 right is `RACK-BS01R-HH`, not `RACK-BS02-HH`. Everything else is mono, and has no `<SIDE>`. However, buses, mains and matrices can be switched to mono. Both of their entries then carry the same signal, and both are named without a side: `RACK-BS01-HH`.
 
 The longest possible suffix (a stereo source, such as `-BS16R-HH`) is 9 characters, so device names are limited to **7 characters**. Headhunter will truncate longer names when you choose them, so be careful!
+
+When a stereo channel on Console A uses a pair of Dante inputs, the pair has a single name. Headhunter names it after the left input, with `S` in place of any side: if Console B sends user patch 1 left to the left input, the pair is named `RACK-UP01S-HH`. The right input is left alone until the pair goes back to mono.
 
 #### Abbreviations
 
 Every abbreviation is unique to ensure there is no confusion about what's on the other end.
 
-| Source group on Console B | Wing name | Abbreviation | Example          | Remote gain? |
-|---------------------------|-----------|--------------|------------------|--------------|
-| Local input               | `LCL`     | `L`          | `RACK-L24-HH`    | Yes          |
-| AES50 port A              | `A`       | `A`          | `RACK-A03-HH`    | Yes          |
-| AES50 port B              | `B`       | `B`          | `RACK-B12-HH`    | Yes          |
-| AES50 port C              | `C`       | `C`          | `RACK-C01-HH`    | Yes          |
-| Aux input                 | `AUX`     | `X`          | `RACK-X04-HH`    | No           |
-| StageConnect              | `SC`      | `S`          | `RACK-S08-HH`    | TBD          |
-| USB                       | `USB`     | `U`          | `RACK-U02-HH`    | No           |
-| Expansion card            | `CRD`     | `K`          | `RACK-K17-HH`    | No           |
-| Internal module           | `MOD`     | `M`          | `RACK-M05-HH`    | No           |
-| USB player                | `PLAY`    | `P`          | `RACK-P01-HH`    | No           |
-| AES/EBU                   | `AES`     | `E`          | `RACK-E01-HH`    | No           |
-| User signal or patch      | `USR`     | `US`         | `RACK-US12-HH`   | No           |
-| Oscillator                | `OSC`     | `OS`         | `RACK-OS01-HH`   | No           |
-| Bus (stereo)              | `BUS`     | `BS`         | `RACK-BS16L-HH`  | No           |
-| Main (stereo)             | `MAIN`    | `MN`         | `RACK-MN01R-HH`  | No           |
-| Matrix (stereo)           | `MTX`     | `MX`         | `RACK-MX04L-HH`  | No           |
-| FX send (stereo)          | `SEND`    | `SN`         | `RACK-SN03R-HH`  | No           |
-| Monitor (stereo)          | `MON`     | `MO`         | `RACK-MO01L-HH`  | No           |
-| Not patched               | `OFF`     | –            | `RACK-OFF-HH`    | No           |
-| Anything else             | –         | `??`         | `RACK-??01-HH`   | No           |
+| Source group on Console B | Wing name   | Abbreviation | Example         | Remote gain?               |
+|---------------------------|-------------|--------------|-----------------|----------------------------|
+| Local input               | `LCL`       | `L`          | `RACK-L24-HH`   | Yes                        |
+| AES50 port A              | `A`         | `A`          | `RACK-A03-HH`   | Yes                        |
+| AES50 port B              | `B`         | `B`          | `RACK-B12-HH`   | Yes                        |
+| AES50 port C              | `C`         | `C`          | `RACK-C01-HH`   | Yes                        |
+| Aux input                 | `AUX`       | `X`          | `RACK-X04-HH`   | No                         |
+| StageConnect              | `SC`        | `S`          | `RACK-S08-HH`   | TBD                        |
+| USB                       | `USB`       | `U`          | `RACK-U02-HH`   | No                         |
+| Expansion card            | `CRD`       | `K`          | `RACK-K17-HH`   | No                         |
+| Internal module           | `MOD`       | `M`          | `RACK-M05-HH`   | No                         |
+| USB player                | `PLAY`      | `P`          | `RACK-P01-HH`   | No                         |
+| AES/EBU                   | `AES`       | `E`          | `RACK-E01-HH`   | No                         |
+| User signal               | `USR` 1–24  | `US`         | `RACK-US12-HH`  | No                         |
+| User patch                | `USR` 25–56 | `UP`         | `RACK-UP01L-HH` | If its source has a preamp |
+| Oscillator                | `OSC`       | `OS`         | `RACK-OS01-HH`  | No                         |
+| Bus (stereo)              | `BUS`       | `BS`         | `RACK-BS16L-HH` | No                         |
+| Main (stereo)             | `MAIN`      | `MN`         | `RACK-MN01R-HH` | No                         |
+| Matrix (stereo)           | `MTX`       | `MX`         | `RACK-MX04L-HH` | No                         |
+| FX send (stereo)          | `SEND`      | `SN`         | `RACK-SN03R-HH` | No                         |
+| Monitor (stereo)          | `MON`       | `MO`         | `RACK-MO01L-HH` | No                         |
+| Not patched               | `OFF`       | –            | `RACK-OFF-HH`   | No                         |
+| Anything else             | –           | `??`         | `RACK-??01-HH`  | No                         |
 
 These are the source groups a Wing can route to a Dante output, as reported by the console itself. Note that a Wing cannot route a channel directly to an output; that is done through user signals, which is why channels do not appear in this table.
+
+User patches are numbered as the console numbers them, from 1. Two linked patches are named as a stereo pair, with `L` and `R`. Gain mode follows a user patch to its source, so a channel fed by a user patch controls the preamp behind it.
 
 Behringer is releasing some StageConnect devices soon, and it is not clear if they will have controllable gain. We shall see.
 
@@ -211,9 +235,16 @@ Headhunter has three names for each console:
 2. The console's Dante name, which is how it is identified by `netaudio`.
 3. The console's Headhunter name, which is how Headhunter identifies it when naming sources.
 
-Headhunter will eventually be able to change a remote console's Headhunter name *and* its Dante name. This is not built yet. Note that Dante subscriptions are stored based on the Dante name, so changing the Dante name would break any subscription pointing at it; when this is built, Headhunter will update every console's subscriptions to the new Dante name as part of the rename.
+Headhunter can change a console's Headhunter name and its Dante name:
 
-Headhunter does not change a console's real name. It could, but the real name is how the console identifies itself to everything else on the network, so we leave it to you to change on the console itself.
+```sh
+headhunter rename RACK --name STAGE         # The Headhunter name
+headhunter rename RACK --dante WingStage    # The Dante name
+```
+
+Dante subscriptions are stored based on the Dante name, so changing it breaks every subscription pointing at it. Headhunter lists every affected subscription on the network, asks before going ahead, and moves them all to the new name. Audio on those channels drops out for a few seconds, so *please* don't do this during a show.
+
+Headhunter does not change a console's real name. It could, but the real name is how the console identifies itself to everything else on the network, so we leave it to you to change on the console yourself.
 
 ### 2. Gain Mode
 
@@ -239,6 +270,8 @@ Steps count from the bottom of the range, not from zero; an SD8 can be at −2, 
 
 Since the ratio is 1:1, turning the trim knob by 2.5 dB adds exactly 2.5 dB of gain on either of the preamps above; turning it by 1.0 dB does nothing.
 
+On a stereo channel, trim adjusts the preamps behind both of its Dante inputs by the same amount, each in its own steps. If only one side has a preamp, only that side changes.
+
 Headhunter only adjusts a stage box preamp when the console reports that the stage box is actually connected. When a stage box connects or disconnects, the console changes that port's range and step size, so Headhunter reads them again.
 
 Trim cannot go past ±18 dB, so if a channel's trim is already at +18 dB, the knob cannot turn any further and you cannot add gain. If it is close to the limit, you can still add gain, just a little at a time; trim is restored after every adjustment, so you can simply repeat it. Similarly for −18 dB and reducing gain.
@@ -263,7 +296,10 @@ To toggle phantom power on the selected channel's remote preamp, press and hold 
 
 At the same time, the channel strip's "colour LED" flashes red (see [Strip Lights](#strip-lights)), whichever way phantom power went. No flash means nothing changed. The current phantom power state is also shown on the scribble strip, alongside the gain.
 
-The button can be released mid-flash; you do not need to hold it down after the initial two seconds.
+The button can be released mid-flash; you do not need to hold it down after the initial two seconds. Pressing it again during the flashing period stops the flash, so you can switch phantom power on or off immediately if necessary.
+
+> [!WARNING]
+> On a stereo channel, both sides switch together: Headhunter will consider phantom power to be "off" unless **both sides** have phantom power enabled (if they both support it). That means if one side has phantom on, and the other is off, **pressing the phantom power button will switch phantom power on for the unpowered side.** Be extremely careful when switching phantom power on for stereo channels! Headhunter **will not** hold your hand. If you tell it to turn phantom power on, it will turn phantom power on.
 
 ### Buttons
 
@@ -292,7 +328,14 @@ Since trim is always restored, Console A never shows the actual preamp gain. To 
 27.5dB ! 48V !
 ```
 
-The exclamation marks make phantom power hard to miss. Three seconds after the last change, the channel's real name and icon come back. If you rename the channel or change its icon while the gain is showing, your change is kept.
+The exclamation marks make phantom power hard to miss. On a stereo channel, both gains are shown if they differ, and phantom power on only one side is marked with its side:
+
+```
+12.5/15.0dB
+12.5dB ! 48V L !
+```
+
+Three seconds after the last change, the channel's real name and icon come back. If you rename the channel or change its icon while the gain is showing, your change is kept.
 
 Channels with **Link customization to source** turned on show their source's name rather than their own, so they get no gain display; gain mode still works on them.
 
@@ -325,9 +368,13 @@ For reference, these are the console parameters Headhunter depends on. `N` is a 
 | `ch.N.col`, `.led`              | A       | Strip colour and light; buses, mains, matrices and DCAs have the same, for the strip light flashes |
 | `$ctl.layer.<section>.sel`      | A       | The layer on each fader section, e.g. `CMPCT` on the Compact |
 | `$ctl.layer.<section>.<layer>.<position>.type`, `.i` | A | What is on each fader of a layer |
+| `$ctl.layer.<section>.<layer>.ofs` | A    | How far a layer is scrolled, when it has more strips than faders |
 | `io.in.MOD.N.name`              | A       | Dante source names, set by Headhunter                 |
+| `io.in.MOD.N.mode`              | A       | Whether a Dante input is half of a stereo pair        |
 | `$ctl.gpio.N.gpstate`           | A       | Gain mode and phantom power buttons                   |
 | `io.out.MOD.N.grp`, `.in`       | B       | What Console B sends to each Dante output             |
+| `io.in.USR.N.mode`              | B       | Whether a user signal or patch is half of a stereo pair |
+| `io.in.USR.N.user.grp`, `.in`   | B       | A user patch's source                                 |
 | `io.in.<group>.N.g`             | B       | Preamp gain                                           |
 | `io.in.<group>.N.vph`           | B       | Phantom power                                         |
 | `$stat.<port>.stat`, `.dev`     | B       | Whether an AES50 port is connected, and to what       |
@@ -349,4 +396,4 @@ Headhunter should never leave either console in a strange state. In particular:
 
 - Two Behringer Wing consoles, each with a Dante module, on the same network, with Dante in switched mode (see [Network Requirements](#network-requirements)).
 - A computer on that network to run Headhunter (we will be planning for Alpine and Debian/Ubuntu).
-- Python 3.13 or newer. `pip` installs everything else, including `netaudio` and `zeroconf`.
+- Python 3.13 or newer.

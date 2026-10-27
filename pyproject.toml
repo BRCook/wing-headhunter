@@ -5,6 +5,7 @@ description = "Remote preamp control for Behringer Wing consoles connected over 
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "aiohttp>=3.9",
     "netaudio",
     "zeroconf",
 ]

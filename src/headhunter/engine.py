@@ -23,7 +23,7 @@ from collections.abc import Callable
 
 from headhunter.consoles import locate
 from headhunter import gain
-from headhunter.buttons import flash
+from headhunter.buttons import flash, gpio_name
 from headhunter.dante import NetaudioError, Subscription, read_subscriptions
 from headhunter.naming import PlannedName, apply_names, paths_for, plan_from_state
 from headhunter.native import NATIVE_PORT, DefinitionRecord, NativeClient, Value, wing_hash
@@ -97,7 +97,9 @@ class ConsoleLink:
             try:
                 async for event in client.events():
                     path = self._by_hash.get(event.hash)
-                    if path is not None and self.state.get(path) != event.value:
+                    # Button reports always count, even if they repeat: Headhunter's own flashes
+                    # change a button's state without being reported, so a repeat can be a new press
+                    if path is not None and (self.state.get(path) != event.value or path.endswith(".gpstate")):
                         old = self.state.get(path)
                         self.state[path] = event.value
                         self._notify(path, old, event.value)
@@ -181,7 +183,7 @@ class Engine:
         self._link_tasks: dict[str, asyncio.Task] = {}
         self.subscriptions: list[Subscription] = []
         self._dirty = asyncio.Event()
-        self._reported: dict[tuple[str, int], tuple[str, str, tuple[str, ...]]] = {}
+        self._reported: dict[tuple[str, int], tuple] = {}
         self._summaries: dict[str, str] = {}
         # Gain mode, per FOH console. Always off at startup (see the README's Startup section)
         self.gain_mode: dict[str, bool] = {}
@@ -190,7 +192,7 @@ class Engine:
         self._follow_dirty = asyncio.Event()
         self._described: dict[str, str] = {}
         self._definitions: dict[tuple, DefinitionRecord] = {}
-        self._accumulators: dict[str, gain.Accumulator] = {}
+        self._accumulators: dict[str, gain.Accumulators] = {}
         # Work for the gain worker, in order: ("trim", foh, strip, delta) or ("restore", foh, strip, None)
         self._work: asyncio.Queue[tuple[str, Pairing, gain.Strip, float | None]] = asyncio.Queue()
         self._dry_gains: dict[tuple[str, str], float] = {}  # What gain would be, in dry-run mode
@@ -202,6 +204,7 @@ class Engine:
         # Phantom power button holds in progress, and flashes being shown
         self._phantom_holds: dict[str, asyncio.TimerHandle] = {}
         self._flashes: set[asyncio.Task] = set()
+        self._button_flashes: dict[str, asyncio.Task] = {}  # The phantom power button flash on each console
         # Strip light flashes on a console take turns, so one never saves another's colours as the real ones
         self._light_locks: dict[str, asyncio.Lock] = {}
 
@@ -211,6 +214,62 @@ class Engine:
         for pairing in self.pairings:
             self._add(pairing)
 
+    # --- Status, for the web page --------------------------------------------------------------
+
+    def status(self) -> dict:
+        """Everything the status page shows, as plain data."""
+        consoles = []
+        for pairing in self.pairings:
+            mac = pairing.console_mac
+            link = self.links.get(mac)
+            connected = link is not None and link.connected
+            entry = {
+                "name": pairing.display_name,
+                "console_name": pairing.console_name,
+                "model": pairing.console_model,
+                "role": pairing.role,
+                "dante_name": pairing.dante_name,
+                "connected": connected,
+                "ip": link.client.host if connected else None,
+            }
+            if pairing.is_foh:
+                summary = self._summaries.get(mac, "")
+                entry.update(
+                    gain_button=gpio_name(pairing.gain_gpio) if pairing.gain_gpio else None,
+                    phantom_button=gpio_name(pairing.phantom_gpio) if pairing.phantom_gpio else None,
+                    gain_mode=self.gain_mode.get(mac, False),
+                    names=summary.split(": ", 1)[1] if ": " in summary else summary,
+                    selected=self._selected_status(pairing) if connected else None,
+                )
+            consoles.append(entry)
+        return {
+            "consoles": consoles,
+            "writing": {"names": self.write_names, "gain": self.write_gain},
+        }
+
+    def _selected_status(self, foh: Pairing) -> dict:
+        selidx = self.links[foh.console_mac].state.get("$ctl.$stat.selidx")
+        target = self.targets.get(foh.console_mac)
+        status = {"strip": gain.strip_full_label(target.strip.label if target else gain.strip_label(selidx))}
+        if target is None or not target.halves:
+            # Not a Dante input at all, or a strip with no source
+            status["reason"] = target.explanation if target else "It has no source."
+            return status
+        halves = target.halves
+        status["stereo"] = len(halves) == 2
+        status["sides"] = []
+        for side, half in zip(("Left", "Right") if len(halves) == 2 else ("",), halves):
+            entry = {"side": side, "source": half.source, "through": half.through}
+            if half.preamp is None:
+                entry["problem"] = half.problem
+            else:
+                stage = self.links[half.preamp.console.console_mac].state
+                level = stage.get(f"{half.preamp.path}.g")
+                entry["gain"] = level if isinstance(level, (int, float)) else None
+                entry["phantom"] = bool(stage.get(f"{half.preamp.path}.vph"))
+            status["sides"].append(entry)
+        return status
+
     # --- Configuration --------------------------------------------------------------------------
 
     def _add(self, pairing: Pairing) -> None:
@@ -219,7 +278,7 @@ class Engine:
         self.links[mac] = ConsoleLink(pairing, self._paths(pairing), self._changed, self._ports.get(mac, NATIVE_PORT))
         if pairing.is_foh:
             self.gain_mode.setdefault(mac, False)
-            self._accumulators.setdefault(mac, gain.Accumulator())
+            self._accumulators.setdefault(mac, gain.Accumulators())
             self._snapshots.setdefault(mac, {})
             self._light_locks.setdefault(mac, asyncio.Lock())
             self._shown.setdefault(mac, {})
@@ -447,18 +506,24 @@ class Engine:
                 self._start_flash(self._flash_layer(foh))
 
     def _phantom_button(self, foh: Pairing, old: Value, new: Value) -> None:
-        """Pressing starts the countdown to toggling phantom power; releasing early cancels it."""
-        if not old and new:
-            if not self.gain_mode[foh.console_mac]:
-                return  # The button does nothing outside gain mode
+        """Pressing starts the countdown to toggling phantom power; releasing early cancels it.
+        A press always stops a confirmation flash still running on the button, so the flash can
+        never get in the way of switching phantom power straight back."""
+        if new:
+            flashing = self._button_flashes.pop(foh.console_mac, None)
+            if flashing is not None:
+                flashing.cancel()
+            # Every press report starts a hold, whatever Headhunter last heard: a release during
+            # a flash may never be reported, so the button's previous state cannot be trusted
+            if foh.console_mac in self._phantom_holds or not self.gain_mode[foh.console_mac]:
+                return  # Already timing this press, or outside gain mode, where the button does nothing
             strip = gain.strip_from_selidx(self.links[foh.console_mac].state.get("$ctl.$stat.selidx"))
             if strip is None:
                 return
-            self._cancel_phantom_hold(foh)
             self._phantom_holds[foh.console_mac] = asyncio.get_running_loop().call_later(
                 PHANTOM_HOLD_SECONDS, self._phantom_held, foh, strip
             )
-        elif old and not new:
+        else:
             self._cancel_phantom_hold(foh)
 
     def _phantom_held(self, foh: Pairing, strip: gain.Strip) -> None:
@@ -595,36 +660,48 @@ class Engine:
         if not self.gain_mode[foh.console_mac]:
             return
         target = self._resolve(foh, strip)
-        if target.preamp is None:
+        preamps = target.preamps
+        if not preamps:
             log.info("%s %s: no 48V: %s", foh.display_name, strip.label, target.reason)
             return
-        preamp = target.preamp
-        link = self.links[preamp.console.console_mac]
-        wanted = 0 if link.state.get(f"{preamp.path}.vph") else 1
+        # On a stereo strip both sides switch together: off if both are on, otherwise on
+        wanted = 0 if all(self.links[p.console.console_mac].state.get(f"{p.path}.vph") for p in preamps) else 1
+        labels = " + ".join(p.label for p in preamps)
         if not self.write_gain:
-            log.info("%s %s: would turn %s 48V %s", foh.display_name, strip.label, preamp.label, "on" if wanted else "off")
+            log.info("%s %s: would turn %s 48V %s", foh.display_name, strip.label, labels, "on" if wanted else "off")
             return
-        if link.client is None:
-            raise ConnectionError(f"Not connected to {preamp.console.display_name}")
-        link.client.set(f"{preamp.path}.vph", wanted)
-        actual = await link.client.get(f"{preamp.path}.vph")
-        link.state[f"{preamp.path}.vph"] = actual  # Never reported back to us
+        confirmed = True
+        for preamp in preamps:
+            link = self.links[preamp.console.console_mac]
+            if link.client is None:
+                raise ConnectionError(f"Not connected to {preamp.console.display_name}")
+            link.client.set(f"{preamp.path}.vph", wanted)
+            actual = await link.client.get(f"{preamp.path}.vph")
+            link.state[f"{preamp.path}.vph"] = actual  # Never reported back to us
+            if actual != wanted:
+                confirmed = False
+                log.warning("%s: 48V did not turn %s", preamp.label, "on" if wanted else "off")
         self._described[foh.console_mac] = await self._description(foh)
-        if actual != wanted:
-            log.warning("%s: 48V did not turn %s", preamp.label, "on" if wanted else "off")
-            return  # No flash: nothing changed
-        log.info("%s %s: %s 48V %s", foh.display_name, strip.label, preamp.label, "on" if actual else "off")
-        await self._show(foh, strip, preamp)
+        if not confirmed:
+            return  # No flash: not everything changed
+        log.info("%s %s: %s 48V %s", foh.display_name, strip.label, labels, "on" if wanted else "off")
+        await self._show(foh, strip, preamps)
         foh_client = self.links[foh.console_mac].client
         if foh_client is not None and foh.phantom_gpio is not None:
-            self._start_flash(self._flash(foh_client, foh.phantom_gpio, "on" if actual else "off"))
+            previous = self._button_flashes.pop(foh.console_mac, None)
+            if previous is not None:
+                previous.cancel()
+            self._button_flashes[foh.console_mac] = self._start_flash(
+                self._flash(foh_client, foh.phantom_gpio, "on" if wanted else "off")
+            )
         self._start_flash(self._flash_lights(foh, [f"{strip.kind}.{strip.number}"], gain.RED))
 
-    def _start_flash(self, coroutine) -> None:
+    def _start_flash(self, coroutine) -> asyncio.Task:
         """Run a flash alongside everything else, keeping hold of it until it finishes."""
         task = asyncio.create_task(coroutine)
         self._flashes.add(task)
         task.add_done_callback(self._flashes.discard)
+        return task
 
     async def _layer_strips(self, foh: Pairing) -> list[str]:
         """The strips on the faders right now, across every fader section, as path prefixes like ch.13."""
@@ -741,53 +818,58 @@ class Engine:
     async def _apply_trim(self, foh: Pairing, strip: gain.Strip, delta: float) -> None:
         if not self.gain_mode[foh.console_mac] or self._adjusting.get(foh.console_mac) != strip:
             return  # Turned off, or interrupted, since this was queued
-        accumulator = self._accumulators[foh.console_mac]
         target = self._resolve(foh, strip)
-        if target.preamp is None:
+        preamps = target.preamps
+        if not preamps:
             return  # Trim is just trim on this channel
-        preamp = target.preamp
+        changed = False
+        for preamp in preamps:  # Both sides of a stereo strip, each in its own steps
+            changed |= await self._move_preamp(foh, strip, preamp, delta)
+        if changed and self.write_gain:
+            self._described[foh.console_mac] = await self._description(foh)  # So the change is not logged twice
+            await self._show(foh, strip, preamps)
+
+    async def _move_preamp(self, foh: Pairing, strip: gain.Strip, preamp: gain.Preamp, delta: float) -> bool:
+        """Add trim movement to one preamp's total, applying any whole steps. Returns whether gain changed."""
+        accumulators = self._accumulators[foh.console_mac]
         definition = await self._definition(preamp)
         if definition is None or not definition.steps or definition.steps < 2:
             log.warning("%s: range unknown, not changing", preamp.label)
-            return
+            return False
         steps = gain.Steps(definition.minimum, definition.maximum, definition.steps)
-        moved = accumulator.add(delta, steps.step)
+        key = (preamp.console.console_mac, preamp.path)
+        moved = accumulators.add(key, delta, steps.step)
         if moved == 0:
-            return
+            return False
 
         link = self.links[preamp.console.console_mac]
-        key = (preamp.console.console_mac, preamp.path)
         current = self._dry_gains.get(key, link.state.get(f"{preamp.path}.g")) if not self.write_gain \
             else link.state.get(f"{preamp.path}.g")
         if not isinstance(current, (int, float)):
-            return
+            return False
         wanted = steps.move(current, moved)
         if wanted == current:
-            accumulator.reset()  # At the end of the range; nothing more to do in this direction
             log.info("%s %s: %s at %+.1f dB, end of range", foh.display_name, strip.label, preamp.label, current)
-            return
+            return False
 
         if not self.write_gain:
             self._dry_gains[key] = wanted
             log.info("%s %s: would set %s %+.1f -> %+.1f dB", foh.display_name, strip.label, preamp.label, current, wanted)
-            return
+            return False
 
         if link.client is None:
             raise ConnectionError(f"Not connected to {preamp.console.display_name}")
         link.client.set(f"{preamp.path}.g", float(wanted))
         actual = await link.client.get(f"{preamp.path}.g")
-        # The console never reports our own changes back, so update the mirror ourselves
-        link.state[f"{preamp.path}.g"] = actual
-        # ...and the follow line too, so the change is not logged twice
-        self._described[foh.console_mac] = await self._description(foh)
+        link.state[f"{preamp.path}.g"] = actual  # The console never reports our own changes back
         if not isinstance(actual, (int, float)) or abs(actual - wanted) > 0.01:
-            accumulator.reset()  # Never build on a change we could not confirm
+            accumulators.reset()  # Never build on a change we could not confirm
             log.warning("%s: wanted %+.1f dB, reads %s", preamp.label, wanted, actual)
-            return
+            return True
         log.info("%s %s: %s %+.1f -> %+.1f dB", foh.display_name, strip.label, preamp.label, current, actual)
-        await self._show(foh, strip, preamp)
+        return True
 
-    async def _show(self, foh: Pairing, strip: gain.Strip, preamp: gain.Preamp) -> None:
+    async def _show(self, foh: Pairing, strip: gain.Strip, preamps: list[gain.Preamp]) -> None:
         """Show a preamp's gain and phantom power on a strip's scribble strip, for a few seconds.
 
         The channel's icon is hidden meanwhile, so the text has the whole scribble strip.
@@ -796,8 +878,11 @@ class Engine:
         base = f"{strip.kind}.{strip.number}"
         if link.state.get(f"{base}.clink") or link.client is None:
             return  # A linked channel shows its source's name, so the display would never be seen
-        stage = self.links[preamp.console.console_mac].state
-        text = gain.display_text(stage.get(f"{preamp.path}.g"), stage.get(f"{preamp.path}.vph"))
+        states = [self.links[p.console.console_mac].state for p in preamps]
+        text = gain.display_text(
+            [state.get(f"{p.path}.g") for p, state in zip(preamps, states)],
+            [state.get(f"{p.path}.vph") for p, state in zip(preamps, states)],
+        )
         name_path, icon_path = f"{base}.name", f"{base}.icon"
         shown = self._shown[foh.console_mac]
         if name_path in shown:
@@ -889,9 +974,11 @@ class Engine:
             return f"{foh.display_name} {gain.strip_label(selidx)}: trim only: {gain.no_source_reason(selidx)}"
         target = self._resolve(foh, strip)
         self.targets[foh.console_mac] = target
-        if target.preamp is None:
+        if not target.preamps:
             return f"{foh.display_name} {strip.label}: trim only: {target.reason}"
-        return f"{foh.display_name} {strip.label} -> {await self._describe(target.preamp)}"
+        described = [await self._describe(preamp) for preamp in target.preamps]
+        stereo = " (stereo)" if len(target.halves) == 2 else ""
+        return f"{foh.display_name} {strip.label}{stereo} -> " + " + ".join(described)
 
     async def _describe(self, preamp: gain.Preamp) -> str:
         """A preamp's gain, phantom power and range, e.g. for the log."""
@@ -941,8 +1028,8 @@ class Engine:
             mine = [p for p in plans if p.console is pairing]
             summary = (
                 f"{pairing.display_name}: {len(mine) + sum(self._waiting(pairing).values())} Dante inputs "
-                f"from paired consoles; {sum(not p.linked and p.current == p.planned for p in mine)} named "
-                f"correctly, {sum(p.needs_writing for p in mine)} to rename, {sum(bool(p.linked) for p in mine)} skipped"
+                f"from paired consoles; {sum(not p.skipped and p.current == p.planned for p in mine)} named "
+                f"correctly, {sum(p.needs_writing for p in mine)} to rename, {sum(p.skipped for p in mine)} skipped"
             )
             for sender, count in sorted(self._waiting(pairing).items()):
                 summary += f", {count} waiting for {sender}"
@@ -951,12 +1038,14 @@ class Engine:
                 log.info("%s", summary)
         for plan in plans:
             key = (plan.console.console_mac, plan.dante_input)
-            summary = (plan.current, plan.planned, plan.linked)
+            summary = (plan.current, plan.planned, plan.linked, plan.paired_with)
             if self._reported.get(key) == summary:
                 continue
             self._reported[key] = summary
             where = f"{plan.console.display_name} MOD {plan.dante_input}"
-            if plan.linked:
+            if plan.paired_with is not None:
+                log.info("%s: not named, stereo with MOD %d", where, plan.paired_with)
+            elif plan.linked:
                 log.info("%s: %r skipped, linked on %s", where, plan.planned, ", ".join(plan.linked))
             elif plan.current != plan.planned and not self.write_names:
                 log.info("%s: would rename %r -> %r", where, plan.current, plan.planned)
@@ -967,6 +1056,7 @@ async def run(
     write_gain: bool | None = None,
     restore_after: float | None = None,
     stats_minutes: float | None = None,
+    port: int | None = None,
 ) -> None:
     """Run Headhunter. Settings come from the database; any given here override them for this run."""
     with Store() as store:
@@ -986,6 +1076,28 @@ async def run(
         overrides=overrides, store_path=path,
     )
     stats_minutes = value["stats_minutes"]
+
+    from headhunter.web import LogBuffer, WebServer
+
+    logs = LogBuffer()
+    logging.getLogger("headhunter").addHandler(logs)
+    web = WebServer(engine, port or settings.web_port, logs=logs)
+    try:
+        await web.start()
+    except OSError as error:
+        raise SystemExit(
+            f"Could not start the web page on port {web.port}: {error.strerror or error}. "
+            "Choose another with --port, or: headhunter settings web_port <port>"
+        ) from None
+    log.info("Status page on port %d", web.port)
+    try:
+        await _run(engine, stats_minutes)
+    finally:
+        await web.stop()
+        logging.getLogger("headhunter").removeHandler(logs)
+
+
+async def _run(engine: Engine, stats_minutes: float) -> None:
     if not stats_minutes:
         await engine.run()
         return

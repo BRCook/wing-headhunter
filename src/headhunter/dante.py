@@ -59,6 +59,9 @@ async def _netaudio(macs: list[str], command: tuple[str, ...], as_json: bool) ->
     except TimeoutError:
         process.kill()
         raise NetaudioError(f"netaudio {' '.join(command)} timed out") from None
+    except asyncio.CancelledError:
+        process.kill()  # Headhunter is stopping; do not leave netaudio running
+        raise
     if process.returncode != 0:
         message = (stderr or stdout).decode(errors="replace").strip()
         raise NetaudioError(f"netaudio {' '.join(command)} failed: {message}")

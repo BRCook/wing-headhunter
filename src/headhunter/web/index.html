@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Headhunter</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface: #e9ebee;
+    --panel: #f7f8f9;
+    --line: #cdd1d6;
+    --text: #1f2328;
+    --muted: #5d6570;
+    --connected: #2f7d4f;
+    --away: #8a5a00;
+    --amber: #b86e00;
+    --amber-glow: #fff1d6;
+    --red: #c4202b;
+    --strip: #20252b;
+    --strip-text: #f2f4f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --surface: #1a1d21;
+      --panel: #24282d;
+      --line: #353b42;
+      --text: #e4e6e9;
+      --muted: #9aa2ac;
+      --connected: #5fbf86;
+      --away: #e0a640;
+      --amber: #f0a020;
+      --amber-glow: #3a2c10;
+      --red: #e0343f;
+      --strip: #0d1013;
+      --strip-text: #f2f4f6;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface);
+    color: var(--text);
+    font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+  main { max-width: 64rem; margin: 0 auto; padding: 1.25rem 1rem 2rem; }
+
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem 1.5rem; margin-bottom: 1.25rem; }
+  h1 { font-size: 1.5rem; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+  .writing { display: flex; gap: 1rem; color: var(--muted); font-size: .95rem; }
+  .writing b { color: var(--text); font-weight: 600; }
+  .link-state { margin-left: auto; font-size: .9rem; color: var(--muted); }
+  .link-state.lost { color: var(--away); font-weight: 600; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.25rem; }
+  .name-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem 1rem; }
+  .name-row h2 { font-size: 1.25rem; margin: 0; }
+  .role { color: var(--muted); }
+  .conn { font-size: .9rem; }
+  .conn.up { color: var(--connected); }
+  .conn.down { color: var(--away); font-weight: 600; }
+  .facts { display: grid; grid-template-columns: max-content 1fr; gap: .2rem 1rem; margin: .75rem 0 0; font-size: .92rem; }
+  .facts dt { color: var(--muted); }
+  .facts dd { margin: 0; overflow-wrap: anywhere; }
+
+  /* The FOH console: gain mode, and what the trim knob controls right now */
+  .foh { margin-bottom: 1rem; transition: box-shadow .3s; }
+  .foh.gain-on { box-shadow: 0 0 0 2px var(--amber); background: linear-gradient(var(--amber-glow), var(--panel) 6rem); }
+  .foh-body { display: grid; grid-template-columns: minmax(10rem, 14rem) 1fr; gap: 1rem 1.5rem; margin-top: 1.25rem; align-items: center; }
+  .mode { font-size: 1.1rem; }
+  .mode strong { display: block; font-size: 2rem; line-height: 1.1; }
+  .gain-on .mode strong { color: var(--amber); }
+  .mode small { display: block; color: var(--muted); font-size: .85rem; margin-top: .25rem; }
+
+  .strip {
+    background: var(--strip);
+    color: var(--strip-text);
+    border-radius: 6px;
+    padding: .85rem 1.1rem;
+    min-height: 6rem;
+    display: flex; flex-direction: column; justify-content: center;
+    border-top: 6px solid #5a636d;
+  }
+  .strip.live { border-top-color: var(--amber); }
+  .strip .where { font-size: 1rem; opacity: .85; }
+  .strip .level { font-size: 2.6rem; font-weight: 700; line-height: 1.1; }
+  .strip .p48, .strip .problem { color: #fff; background: var(--red); border-radius: 4px; padding: 0 .4rem; font-size: 1rem; vertical-align: middle; margin-left: .6rem; font-weight: 700; white-space: nowrap; }
+  .strip .problem { background: #5a636d; font-size: .85rem; }
+  .strip .why { font-size: 1.05rem; opacity: .8; }
+  .strip .title { font-size: 1.3rem; font-weight: 600; margin-bottom: .15rem; }
+  .strip .sides { display: grid; grid-template-columns: max-content 1fr max-content; gap: .15rem .9rem; align-items: baseline; margin-top: .3rem; }
+  .strip .sides .side { opacity: .75; }
+  .strip .sides .route { font-size: 1rem; opacity: .85; }
+  .strip .sides .level { font-size: 1.9rem; text-align: right; white-space: nowrap; }
+
+  .naming { grid-column: 1 / -1; color: var(--muted); font-size: .95rem; margin: 0; }
+
+  .stages { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+
+  h3 { font-size: 1rem; margin: 0 0 .5rem; }
+  .log {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    height: 18rem; overflow-y: auto; padding: .5rem .75rem; font-size: .85rem;
+  }
+  .log p { margin: 0; padding: .1rem 0; display: grid; grid-template-columns: 4.5rem 1fr; gap: .5rem; }
+  .log time { color: var(--muted); }
+  .log .warning span, .log .error span { color: var(--away); }
+  .empty { color: var(--muted); }
+
+  @media (max-width: 40rem) {
+    .foh-body { grid-template-columns: 1fr; }
+    .link-state { margin-left: 0; width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .foh { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Headhunter</h1>
+    <div class="writing" id="writing"></div>
+    <div class="link-state" id="link-state">Connecting…</div>
+  </header>
+
+  <section id="foh"></section>
+  <section class="stages" id="stages"></section>
+
+  <h3>Log</h3>
+  <div class="log" id="log" role="log" aria-live="polite"></div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (text) => String(text ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const dB = (value) => (value > 0 ? "+" : "") + value.toFixed(1) + " dB";
+
+function connection(console) {
+  return console.connected
+    ? `<span class="conn up">Connected</span>`
+    : `<span class="conn down">Not connected</span>`;
+}
+
+function facts(rows) {
+  return `<dl class="facts">${rows.filter(([, value]) => value)
+    .map(([label, value]) => `<dt>${esc(label)}</dt><dd>${esc(value)}</dd>`).join("")}</dl>`;
+}
+
+function consoleFacts(console, extra = []) {
+  return facts([
+    ["Console name", console.console_name],
+    ["Dante name", console.dante_name],
+    ["Address", console.connected ? console.ip : "Not connected"],
+    ...extra,
+  ]);
+}
+
+function level(side) {
+  if (side.problem) return problem(side);
+  const p48 = side.phantom ? `<span class="p48">48V</span>` : "";
+  return (side.gain === null ? "?" : dB(side.gain)) + p48;
+}
+
+function route(side) {
+  return `→ ${esc(side.source)}${side.through ? `, through ${esc(side.through)}` : ""}`;
+}
+
+function problem(side) {
+  return `<span class="problem">${esc(side.problem.toUpperCase())}</span>`;
+}
+
+function strip(selected, gainMode) {
+  if (!selected) return `<div class="strip"><div class="why">Waiting for the console</div></div>`;
+  if (!selected.sides) {
+    return `<div class="strip"><div class="title">${esc(selected.strip)}</div><div class="why">Trim only. ${esc(selected.reason)}</div></div>`;
+  }
+  if (!selected.stereo) {
+    const side = selected.sides[0];
+    return `<div class="strip ${gainMode ? "live" : ""}">
+      <div class="where">${esc(selected.strip)} ${route(side)}</div>
+      <div class="level">${level(side)}</div></div>`;
+  }
+  const rows = selected.sides.map((side) => `<span class="side">${esc(side.side)}</span>
+    <span class="route">${route(side)}</span><span class="level">${level(side)}</span>`).join("");
+  return `<div class="strip ${gainMode ? "live" : ""}">
+    <div class="where">${esc(selected.strip)}, stereo</div>
+    <div class="sides">${rows}</div></div>`;
+}
+
+function renderFoh(console) {
+  const button = (gpio) => gpio ? `GPIO ${gpio}` : "Not chosen";
+  return `<div class="panel foh ${console.gain_mode ? "gain-on" : ""}">
+    <div class="name-row"><h2>${esc(console.name)}</h2><span class="role">FOH</span>${connection(console)}</div>
+    ${consoleFacts(console, [["Gain mode button", button(console.gain_button)], ["Phantom power button", button(console.phantom_button)]])}
+    <div class="foh-body">
+      <div class="mode">Gain mode<strong>${console.gain_mode ? "On" : "Off"}</strong>
+        <small>${console.gain_mode ? "Trim adjusts the preamp" : "Trim is trim"}</small></div>
+      ${strip(console.selected, console.gain_mode)}
+      ${console.names ? `<p class="naming">Source names: ${esc(console.names)}</p>` : ""}
+    </div></div>`;
+}
+
+function renderStage(console) {
+  return `<div class="panel">
+    <div class="name-row"><h2>${esc(console.name)}</h2><span class="role">Stage</span>${connection(console)}</div>
+    ${consoleFacts(console)}</div>`;
+}
+
+function renderStatus(status) {
+  const on = (value) => value ? "<b>on</b>" : "off";
+  $("writing").innerHTML = `<span>Writing names ${on(status.writing.names)}</span><span>Changing gain ${on(status.writing.gain)}</span>`;
+  const fohs = status.consoles.filter((c) => c.role === "FOH");
+  const stages = status.consoles.filter((c) => c.role !== "FOH");
+  $("foh").innerHTML = fohs.length ? fohs.map(renderFoh).join("")
+    : `<div class="panel foh"><p class="empty">No console is marked FOH. Run <code>headhunter role &lt;name&gt; FOH</code>.</p></div>`;
+  $("stages").innerHTML = stages.map(renderStage).join("");
+}
+
+function addLog(lines) {
+  const box = $("log");
+  const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  for (const line of lines) {
+    const p = document.createElement("p");
+    p.className = line.level;
+    p.innerHTML = `<time>${esc(line.time)}</time><span>${esc(line.message)}</span>`;
+    box.appendChild(p);
+  }
+  while (box.childElementCount > 300) box.firstElementChild.remove();
+  if (atBottom) box.scrollTop = box.scrollHeight;
+}
+
+function connect() {
+  const socket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
+  socket.onopen = () => {
+    $("link-state").textContent = "Live";
+    $("link-state").classList.remove("lost");
+    $("log").innerHTML = "";
+  };
+  socket.onmessage = (event) => {
+    const message = JSON.parse(event.data);
+    if (message.type === "status") renderStatus(message.status);
+    if (message.type === "log") addLog(message.lines);
+  };
+  socket.onclose = () => {
+    $("link-state").textContent = "Lost contact with Headhunter; retrying";
+    $("link-state").classList.add("lost");
+    setTimeout(connect, 2000);
+  };
+}
+connect();
+</script>
+</body>
+</html>

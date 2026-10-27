@@ -38,3 +38,29 @@ def test_unknown_transmit_channels_are_not_connected(netaudio_output):
     first = parse_subscriptions(subscriptions, channels)[0]
     assert first.tx_channel is None
     assert not first.connected
+
+
+def test_netaudio_is_not_left_running_when_headhunter_stops(monkeypatch):
+    import asyncio
+    import sys
+
+    from headhunter import dante
+
+    started = {}
+    real_exec = asyncio.create_subprocess_exec
+
+    async def slow_netaudio(*args, **kwargs):
+        process = await real_exec(sys.executable, "-c", "import time; time.sleep(30)", **kwargs)
+        started["process"] = process
+        return process
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", slow_netaudio)
+
+    async def scenario():
+        task = asyncio.create_task(dante.run_netaudio([], "subscription", "list"))
+        await asyncio.sleep(0.5)
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+        await asyncio.wait_for(started["process"].wait(), 2)  # Killed, not left sleeping
+
+    asyncio.run(scenario())
