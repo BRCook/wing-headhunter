@@ -32,6 +32,8 @@ from headhunter.store import Pairing, Store
 log = logging.getLogger(__name__)
 
 RETRY_SECONDS = 5.0  # Between attempts to find or reconnect to a console
+READ_BATCH = 100  # Parameters read at once when a console connects
+READ_TIMEOUT, SLOW_READ_TIMEOUT = 2.0, 5.0  # A second, slower try for anything that did not answer
 DANTE_POLL_SECONDS = 5.0
 SETTLE_SECONDS = 0.5  # Wait for a burst of changes to finish before recalculating
 FOLLOW_SECONDS = 0.1  # Same, for following the selected channel
@@ -79,37 +81,64 @@ class ConsoleLink:
             client = NativeClient(ip, self.port, label=self.name)
             try:
                 await client.connect()
-                values = await asyncio.gather(*(self._read(client, path) for path in self.paths))
+                state = await self._read_all(client)
             except (OSError, TimeoutError, ConnectionError) as error:
                 log.warning("Could not connect to %s at %s: %s", self.name, ip, error or type(error).__name__)
                 await client.close()
                 await asyncio.sleep(RETRY_SECONDS)
                 continue
 
-            # Parameters the console does not have (such as local inputs 9-24 on a
-            # full-size Wing) never answer, and are left out of the mirror
-            self.state = {path: value for path, value in zip(self.paths, values) if value is not _MISSING}
+            self.state = state
             self.client = client
             log.info("Connected to %s at %s", self.name, ip)
-            self.on_change(self, None, None, None)
+            self._notify(None, None, None)
             try:
                 async for event in client.events():
                     path = self._by_hash.get(event.hash)
                     if path is not None and self.state.get(path) != event.value:
                         old = self.state.get(path)
                         self.state[path] = event.value
-                        self.on_change(self, path, old, event.value)
+                        self._notify(path, old, event.value)
             finally:
                 self.client = None
                 await client.close()
             log.warning("Lost connection to %s; retrying", self.name)
-            self.on_change(self, None, None, None)
+            self._notify(None, None, None)
             await asyncio.sleep(RETRY_SECONDS)
 
-    @staticmethod
-    async def _read(client: NativeClient, path: str) -> Value:
+    def _notify(self, path: str | None, old: Value, new: Value) -> None:
+        """Report a change; a problem handling one change must never stop the connection."""
         try:
-            return await client.get(path)
+            self.on_change(self, path, old, new)
+        except Exception:
+            log.exception("Error handling a change to %s on %s", path, self.name)
+
+    async def _read_all(self, client: NativeClient) -> dict[str, Value]:
+        """Read every mirrored parameter, in batches. Anything that does not answer gets a
+        second, slower try; anything still missing is logged and left out of the mirror."""
+        state: dict[str, Value] = {}
+        missing: list[str] = []
+        for timeout, paths in ((READ_TIMEOUT, self.paths), (SLOW_READ_TIMEOUT, None)):
+            paths = paths if paths is not None else missing
+            missing = []
+            for start in range(0, len(paths), READ_BATCH):
+                batch = paths[start : start + READ_BATCH]
+                values = await asyncio.gather(*(self._read(client, path, timeout) for path in batch))
+                for path, value in zip(batch, values):
+                    if value is _MISSING:
+                        missing.append(path)
+                    else:
+                        state[path] = value
+            if not missing:
+                break
+        if missing:
+            log.warning("%s did not report %d parameters, e.g. %s", self.name, len(missing), ", ".join(missing[:3]))
+        return state
+
+    @staticmethod
+    async def _read(client: NativeClient, path: str, timeout: float) -> Value:
+        try:
+            return await client.get(path, timeout)
         except TimeoutError:
             return _MISSING
 
@@ -149,7 +178,7 @@ class Engine:
         self._summaries: dict[str, str] = {}
         # Gain mode, per FOH console. Always off at startup (see the README's Startup section)
         self.gain_mode: dict[str, bool] = {p.console_mac: False for p in pairings if p.is_foh}
-        self._started: set[str] = set()  # FOH consoles connected to at least once
+        self._connected_before: set[str] = set()
         self.targets: dict[str, gain.Target | None] = {}
         self._follow_dirty = asyncio.Event()
         self._described: dict[str, str] = {}
@@ -168,6 +197,7 @@ class Engine:
         self._flashes: set[asyncio.Task] = set()
         # Strip light flashes on a console take turns, so one never saves another's colours as the real ones
         self._light_locks: dict[str, asyncio.Lock] = {p.console_mac: asyncio.Lock() for p in pairings if p.is_foh}
+
         # Gain displays on scribble strips: per FOH console, name path -> (real name, text shown, real icon)
         self._shown: dict[str, dict[str, tuple[Value, str, Value]]] = {p.console_mac: {} for p in pairings if p.is_foh}
         self._display_timers: dict[tuple[str, str], asyncio.TimerHandle] = {}
@@ -184,8 +214,11 @@ class Engine:
     ) -> None:
         self._dirty.set()
         self._follow_dirty.set()
-        if link is not None and path is None and link.connected and link.pairing.is_foh:
-            self._first_connection(link)
+        if link is not None and path is None and link.pairing.is_foh:
+            if link.connected:
+                self._fresh_connection(link)
+            else:
+                self._forget(link.pairing)
         if link is not None and path is not None and link.pairing.is_foh:
             self._button_changed(link.pairing, path, old, new)
             self._trim_changed(link, path, old, new)
@@ -251,14 +284,33 @@ class Engine:
             timer.cancel()
         self._work.put_nowait(("restore", foh, strip, None))
 
-    def _first_connection(self, link: ConsoleLink) -> None:
-        """At startup, a gain mode button that is already on is noted, and ignored."""
+    def _fresh_connection(self, link: ConsoleLink) -> None:
+        """Every connection to a FOH console starts from a blank slate, as at startup:
+        a gain mode button that is already on is noted, and ignored."""
         foh = link.pairing
-        if foh.console_mac in self._started:
-            return
-        self._started.add(foh.console_mac)
+        when = "reconnect" if foh.console_mac in self._connected_before else "boot"
+        self._connected_before.add(foh.console_mac)
         if foh.gain_gpio is not None and link.state.get(f"$ctl.gpio.{foh.gain_gpio}.gpstate"):
-            log.info("%s: gain mode toggle ON at boot; ignoring", foh.display_name)
+            log.info("%s: gain mode toggle ON at %s; ignoring", foh.display_name, when)
+
+    def _forget(self, foh: Pairing) -> None:
+        """A FOH console dropped off the network: abandon everything in progress on it.
+        Nothing is finished or restored when it comes back."""
+        mac = foh.console_mac
+        if self.gain_mode[mac]:
+            log.warning("%s: gain mode off; everything in progress is abandoned", foh.display_name)
+        self.gain_mode[mac] = False
+        self._accumulators[mac].reset()
+        self._adjusting.pop(mac, None)
+        self._snapshots[mac] = {}
+        self._shown[mac] = {}
+        self._cancel_phantom_hold(foh)
+        for timers in (self._restore_timers, self._phantom_holds):
+            timer = timers.pop(mac, None)
+            if timer is not None:
+                timer.cancel()
+        for key in [key for key in self._display_timers if key[0] == mac]:
+            self._display_timers.pop(key).cancel()
 
     def _button_changed(self, foh: Pairing, path: str, old: Value, new: Value) -> None:
         """Turn gain mode on or off when its button changes, and time holds of the phantom
@@ -356,6 +408,8 @@ class Engine:
                 subscriptions = await read_subscriptions(self.pairings)
             except NetaudioError as error:
                 log.warning("Could not read Dante subscriptions: %s", error)
+            except Exception:
+                log.exception("Error reading Dante subscriptions")
             else:
                 if subscriptions != self.subscriptions:
                     if self.subscriptions:
@@ -369,7 +423,10 @@ class Engine:
             await self._dirty.wait()
             await asyncio.sleep(SETTLE_SECONDS)
             self._dirty.clear()
-            await self._update_names()
+            try:
+                await self._update_names()
+            except Exception:
+                log.exception("Error updating source names")
 
     def plans(self) -> list[PlannedName]:
         """The names Headhunter wants right now, from connected consoles only."""
@@ -417,6 +474,9 @@ class Engine:
                 action = {"trim": "change gain", "restore": "restore trim", "phantom": "change 48V",
                           "unshow": "restore a channel name"}[kind]
                 log.warning("Could not %s: %s", action, error or type(error).__name__)
+            except Exception:
+                self._accumulators[foh.console_mac].reset()
+                log.exception("Error handling %s on %s", kind, foh.display_name)
 
     async def _toggle_phantom(self, foh: Pairing, strip: gain.Strip) -> None:
         """Toggle phantom power on a strip's remote preamp, and confirm it by flashing the button."""
@@ -528,7 +588,7 @@ class Engine:
                         client.set(path, link.state.get(path, value))
                     await client.flush()
             except ConnectionError:
-                pass  # The console went away; nothing to show
+                pass  # The console went away; nothing is restored when it comes back
 
     @staticmethod
     def _set_lights(client: NativeClient, lights: list[str], on: int) -> None:
@@ -653,13 +713,13 @@ class Engine:
         timer = self._display_timers.pop((foh.console_mac, name_path), None)
         if timer is not None:
             timer.cancel()
-        entry = self._shown[foh.console_mac].pop(name_path, None)
+        entry = self._shown[foh.console_mac].get(name_path)
         if entry is None:
             return
         real_name, text, real_icon = entry
         link = self.links[foh.console_mac]
-        if link.client is None:
-            raise ConnectionError(f"Not connected to {foh.display_name}")
+        if not link.connected:
+            return  # Forgotten when the connection drops; nothing is restored when it comes back
         # Each is only put back if it is still as Headhunter left it; a change made meanwhile stays
         if link.state.get(name_path) == text:
             link.client.set(name_path, real_name)
@@ -667,6 +727,7 @@ class Engine:
         if real_icon != gain.NO_ICON and link.state.get(icon_path) == gain.NO_ICON:
             link.client.set(icon_path, real_icon)
             link.state[icon_path] = real_icon
+        self._shown[foh.console_mac].pop(name_path, None)
 
     def _unshow_all(self, foh: Pairing) -> None:
         """Queue every gain display on a console to be taken down straight away."""
@@ -690,7 +751,12 @@ class Engine:
             self._follow_dirty.clear()
             for pairing in self.pairings:
                 if pairing.is_foh:
-                    await self._follow(pairing)
+                    try:
+                        await self._follow(pairing)
+                    except (ConnectionError, TimeoutError):
+                        pass  # Followed again when the console reconnects
+                    except Exception:
+                        log.exception("Error following %s", pairing.display_name)
 
     async def _follow(self, foh: Pairing) -> None:
         """Work out what the trim knob on the selected channel would control, and report it if that changed."""

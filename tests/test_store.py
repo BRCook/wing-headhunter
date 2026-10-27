@@ -118,3 +118,30 @@ def test_version_2_databases_are_upgraded(tmp_path):
         pairing = store.pairings()[0]
         assert (pairing.role, pairing.gain_gpio, pairing.phantom_gpio) == (FOH, None, None)
         store.set_buttons("m", 3, 4)
+
+
+def test_display_names_are_unique_ignoring_case(store):
+    store.add(RACK, RACK_CARD, "RACK")
+    with pytest.raises(ValueError):
+        store.add(COMPACT, COMPACT_CARD, "rack")
+
+
+def test_version_3_databases_are_upgraded(tmp_path):
+    path = tmp_path / "v3.db"
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE consoles (console_mac TEXT PRIMARY KEY, console_name TEXT NOT NULL,
+            console_model TEXT NOT NULL, console_serial TEXT NOT NULL, dante_mac TEXT NOT NULL UNIQUE,
+            dante_name TEXT NOT NULL, display_name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'STAGE', gain_gpio INTEGER, phantom_gpio INTEGER);
+        INSERT INTO consoles VALUES ('m', 'n', 'wing-rack', 's', 'd', 'WingRack', 'RACK', 't', 't', 'STAGE', NULL, NULL);
+        PRAGMA user_version = 3;
+        """
+    )
+    db.commit()
+    db.close()
+    with Store(path) as store:
+        assert store.by_display_name("rack").display_name == "RACK"
+        with pytest.raises(ValueError):
+            store.add(COMPACT, COMPACT_CARD, "Rack")

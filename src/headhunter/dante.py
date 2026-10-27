@@ -36,10 +36,19 @@ class Subscription:
 
 
 async def run_netaudio(macs: list[str], *command: str) -> object:
-    """Run a netaudio command against the given devices and return its JSON."""
+    """Run a netaudio command against the given devices (all devices, if none are given) and return its JSON."""
+    return await _netaudio(macs, command, as_json=True)
+
+
+async def run_netaudio_text(macs: list[str], *command: str) -> str:
+    """Run a netaudio command that changes something, and return what it printed."""
+    return await _netaudio(macs, command, as_json=False)
+
+
+async def _netaudio(macs: list[str], command: tuple[str, ...], as_json: bool) -> object:
     global RUNS
     RUNS += 1
-    args = [sys.executable, "-m", "netaudio", "--json"]
+    args = [sys.executable, "-m", "netaudio"] + (["--json"] if as_json else [])
     for mac in macs:
         args += ["-m", mac]
     process = await asyncio.create_subprocess_exec(
@@ -51,7 +60,10 @@ async def run_netaudio(macs: list[str], *command: str) -> object:
         process.kill()
         raise NetaudioError(f"netaudio {' '.join(command)} timed out") from None
     if process.returncode != 0:
-        raise NetaudioError(f"netaudio {' '.join(command)} failed: {stderr.decode(errors='replace').strip()}")
+        message = (stderr or stdout).decode(errors="replace").strip()
+        raise NetaudioError(f"netaudio {' '.join(command)} failed: {message}")
+    if not as_json:
+        return stdout.decode(errors="replace").strip()
     try:
         return json.loads(stdout)
     except json.JSONDecodeError as error:
@@ -90,6 +102,27 @@ def parse_subscriptions(subscriptions: list, channels: dict) -> list[Subscriptio
             )
         )
     return parsed
+
+
+async def read_all_subscriptions() -> list[Subscription]:
+    """Read every subscription on every Dante device on the network."""
+    subscriptions, channels = await asyncio.gather(
+        run_netaudio([], "subscription", "list"),
+        run_netaudio([], "channel", "list"),
+    )
+    if not isinstance(subscriptions, list) or not isinstance(channels, dict):
+        raise NetaudioError("netaudio returned data in an unexpected shape")
+    return parse_subscriptions(subscriptions, channels)
+
+
+async def rename_device(dante_mac: str, new_name: str) -> None:
+    """Rename a Dante device; netaudio reads the name back and fails if it did not take."""
+    await run_netaudio_text([dante_mac], "device", "name", new_name)
+
+
+async def subscribe(tx_device: str, tx_channel: int, rx_device: str, rx_channel: int) -> None:
+    """Subscribe a receive channel to a transmit channel, both by number."""
+    await run_netaudio_text([], "subscription", "add", "--tx", f"tx:{tx_channel}@{tx_device}", "--rx", f"rx:{rx_channel}@{rx_device}")
 
 
 async def read_subscriptions(pairings: list[Pairing]) -> list[Subscription]:

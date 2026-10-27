@@ -851,3 +851,80 @@ def test_bus_layers_flash_the_buses_on_the_faders(network, quick_lights):
             await compact.stop()
 
     asyncio.run(scenario())
+
+
+async def drop_and_return(running, wing, mac, away=0.6):
+    """Take a console off the network for a while, as a pulled cable would, then bring it back."""
+    await wing.stop()
+    await wait_for(lambda: not running.links[mac].connected)
+    await asyncio.sleep(away)
+    await wing.start()
+    await wait_for(lambda: running.links[mac].connected)
+
+
+def test_losing_the_foh_console_starts_over(network, quick_display, caplog):
+    """A dropped FOH console means nothing in progress can be trusted: gain mode turns off, and
+    nothing is finished or restored when it comes back, just as after a restart."""
+    caplog.set_level("INFO", logger="headhunter.engine")
+    foh = Pairing(**{**COMPACT.__dict__, "gain_gpio": 3})
+
+    async def scenario():
+        rack, compact = stage_box_setup(foh)
+        compact.values["ch.13.name"] = "KICK IN"
+        await rack.start()
+        await compact.start()
+        running = engine.Engine(
+            [RACK, foh], ports={"rack-mac": rack.port, "compact-mac": compact.port}, write_gain=True, restore_after=0.3
+        )
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: (t := running.targets.get("compact-mac")) and t.preamp is not None)
+            compact.push("$ctl.gpio.3.gpstate", 1)
+            await wait_for(lambda: running.gain_mode["compact-mac"])
+            compact.push("ch.13.in.set.trim", 4.6)
+            await wait_for(lambda: compact.values["ch.13.name"] == "3.0dB")
+
+            await drop_and_return(running, compact, "compact-mac", away=1.0)
+            assert not running.gain_mode["compact-mac"]
+            assert "gain mode toggle ON at reconnect; ignoring" in caplog.text
+            await asyncio.sleep(1.0)
+            # Left exactly as they were when the connection dropped
+            assert compact.values["ch.13.name"] == "3.0dB"
+            assert compact.values["ch.13.in.set.trim"] == 4.6
+
+            # The button needs turning off and on again
+            compact.push("$ctl.gpio.3.gpstate", 0)
+            compact.push("$ctl.gpio.3.gpstate", 1)
+            await wait_for(lambda: running.gain_mode["compact-mac"])
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())
+
+
+def test_a_value_headhunter_does_not_understand_does_not_stop_it(network):
+    async def scenario():
+        rack = FakeWing({**defaults(RACK), "io.out.MOD.1.grp": "LCL", "io.out.MOD.1.in": 24})
+        compact = FakeWing(defaults(COMPACT))
+        await rack.start()
+        await compact.start()
+        running = engine.Engine([RACK, COMPACT], write_names=True, ports={"rack-mac": rack.port, "compact-mac": compact.port})
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: compact.values["io.in.MOD.1.name"] == "RACK-L24-HH")
+            rack.push("io.out.MOD.2.grp", "LCL")
+            rack.push("io.out.MOD.2.in", "nonsense")
+            rack.push("io.out.MOD.3.grp", "LCL")
+            rack.push("io.out.MOD.3.in", 7)
+            await wait_for(lambda: compact.values["io.in.MOD.3.name"] == "RACK-L07-HH")
+            assert not task.done()
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())

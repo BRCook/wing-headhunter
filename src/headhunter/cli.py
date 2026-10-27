@@ -6,6 +6,7 @@
     headhunter dante                  Show what each paired console receives over Dante
     headhunter names [--write]        Name Dante sources on FOH consoles (dry run without --write)
     headhunter buttons <name> --gain N [--phantom N]  Choose a FOH console's GPIO buttons
+    headhunter rename <name> [--name NEW] [--dante NEW]  Change a console's Headhunter or Dante name
     headhunter run [--write-names] [--write-gain]  Keep running: keep names up to date, and run gain mode
 """
 
@@ -91,6 +92,62 @@ def buttons(args: argparse.Namespace) -> None:
         print(f"Note that {pairing.display_name} is not marked FOH, so its buttons will not be used.")
 
 
+def rename(args: argparse.Namespace) -> None:
+    from headhunter import renaming
+
+    if not args.name and not args.dante:
+        raise SystemExit("Give --name, --dante, or both.")
+    with Store() as store:
+        pairing = store.by_display_name(args.display_name)
+    if pairing is None:
+        raise SystemExit(f"No paired console called {args.display_name!r}")
+
+    if args.dante:
+        try:
+            plan = asyncio.run(renaming.plan(pairing, args.dante))
+        except ValueError as error:
+            raise SystemExit(str(error)) from None
+        print(f"Renaming Dante device {pairing.dante_name} to {plan.new_name}.")
+        if plan.affected:
+            print(f"These {len(plan.affected)} subscriptions will be moved to the new name:")
+            for device in sorted({s.rx_device for s in plan.affected}):
+                channels = sorted(s.rx_channel for s in plan.affected if s.rx_device == device)
+                print(f"  {device}: {len(channels)} channels ({_ranges(channels)})")
+            print("Audio on these channels will drop out for a few seconds.")
+        if input("Go ahead? [y/N] ").strip().lower() != "y":
+            raise SystemExit("Cancelled; nothing was changed.")
+        failed = asyncio.run(renaming.execute(plan))
+        with Store() as store:
+            store.set_dante_name(pairing.console_mac, plan.new_name)
+        if failed:
+            print(f"Renamed, but {len(failed)} subscriptions did not reconnect; check them in Dante Controller:")
+            for sub in failed:
+                print(f"  {sub.rx_device} channel {sub.rx_channel} <- {plan.new_name} channel {sub.tx_channel}")
+            raise SystemExit(1)
+        print(f"Renamed to {plan.new_name}; every subscription reconnected.")
+
+    if args.name:
+        with Store() as store:
+            try:
+                store.rename(pairing.console_mac, args.name)
+            except ValueError as error:
+                raise SystemExit(str(error)) from None
+            new = store.by_console_mac(pairing.console_mac).display_name
+        print(f"{pairing.display_name} is now called {new} in Headhunter. Restart 'headhunter run' to use the new name.")
+
+
+def _ranges(numbers: list[int]) -> str:
+    """1, 2, 3, 5, 7, 8 -> 1-3, 5, 7-8"""
+    parts, start = [], None
+    for i, n in enumerate(numbers):
+        if start is None:
+            start = n
+        if i + 1 == len(numbers) or numbers[i + 1] != n + 1:
+            parts.append(f"{start}-{n}" if n != start else str(n))
+            start = None
+    return ", ".join(parts)
+
+
 def names(args: argparse.Namespace) -> None:
     asyncio.run(run_naming(args.write))
 
@@ -127,6 +184,12 @@ def main() -> None:
     buttons_parser.add_argument("--gain", type=int, required=True, metavar="GPIO", help="GPIO for the gain mode button, 1 to 4")
     buttons_parser.add_argument("--phantom", type=int, metavar="GPIO", help="GPIO for the phantom power button, 1 to 4")
     buttons_parser.set_defaults(func=buttons)
+
+    rename_parser = commands.add_parser("rename", help="Change a console's Headhunter name or Dante name")
+    rename_parser.add_argument("display_name", help="The console's current Headhunter name, e.g. RACK")
+    rename_parser.add_argument("--name", metavar="NEW", help="New Headhunter name, 7 characters max")
+    rename_parser.add_argument("--dante", metavar="NEW", help="New Dante device name; subscriptions to it are moved over")
+    rename_parser.set_defaults(func=rename)
 
     run_parser = commands.add_parser("run", help="Keep running, and keep names up to date as things change")
     run_parser.add_argument("--write-names", action="store_true", help="Write names (without this, only report them)")

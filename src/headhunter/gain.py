@@ -154,14 +154,14 @@ NO_ICON = 0
 RED = 9  # From the colour chart in Behringer's protocol document
 WHITE = 18  # The nearest to white in the same chart
 
-# Fader sections by console model, and how many faders each shows. Only the
-# Compact's layout has been checked on a real console; the others are from the
-# protocol document.
+# Fader sections by console model, and how many strips each shows at once. Each
+# section can be on its own layer; the console reports what is on each layer, so
+# this is all Headhunter needs to know about a model.
 LAYER_SECTIONS = {
     "wing-compact": [("CMPCT", 12)],
-    "wing-rack": [("RCK", 12)],
+    "wing-rack": [("RCK", 4)],
 }
-LAYER_SECTIONS_DEFAULT = [("L", 12), ("C", 8), ("R", 4)]  # The full-size Wing
+LAYER_SECTIONS_DEFAULT = [("L", 12), ("C", 8), ("R", 4)]  # The full-size Wing's three fader banks
 
 
 def layer_sections(pairing: Pairing) -> list[tuple[str, int]]:
@@ -263,6 +263,8 @@ def resolve(
         return Target(strip, None, f"{where} not patched")
     if tx_group not in PREAMP_GROUPS:
         return Target(strip, None, f"{where} is {source_label(tx_group, tx_number)}")
+    if not isinstance(tx_number, int):
+        return Target(strip, None, f"{where} is {tx_group} {tx_number!r}, not understood")
     if tx_group in AES50_PORTS and tx_state.get(f"$stat.{tx_group}.stat") != "OK":
         return Target(strip, None, f"{sender.display_name} AES50 {tx_group} empty")
     preamp = Preamp(sender, str(tx_group), int(tx_number))

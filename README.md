@@ -343,6 +343,7 @@ Headhunter should never leave either console in a strange state. In particular:
 - If Console B or the Dante network becomes unreachable, gain mode stops acting immediately; trims are restored, and channel names are restored. Headhunter keeps looking for the missing console, and picks up where it left off when it comes back, at whatever IP address it turns up at.
 - If Headhunter itself crashes, the trim knob already behaves normally, since gain mode only exists inside Headhunter. At most one adjustment's worth of trim may be left unrestored, and any gain display or strip light flash in progress will stick. When Headhunter is started again, it follows the rules in [Startup](#startup).
 - Headhunter never applies a change it cannot confirm. Every change to gain, phantom power or trim is read back from the console; if it did not take, the change is dropped, not retried later.
+- If Console A drops off the network, Headhunter starts over when it comes back, just as if it had been restarted (see [Startup](#startup)). Gain mode turns off, and anything in progress is abandoned.
 
 ## Requirements
 

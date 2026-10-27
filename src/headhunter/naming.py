@@ -121,7 +121,9 @@ def linked_from_state(state: State) -> dict[int, list[str]]:
             label = f"{kind.upper()} {n}"
             for group_leaf, number_leaf in (("grp", "in"), ("altgrp", "altin")):
                 if state.get(f"{base}.in.conn.{group_leaf}") == "MOD":
-                    source = int(state.get(f"{base}.in.conn.{number_leaf}") or 0)
+                    source = state.get(f"{base}.in.conn.{number_leaf}")
+                    if not isinstance(source, int):
+                        continue
                     if label not in linked.setdefault(source, []):
                         linked[source].append(label)
     return linked
@@ -154,8 +156,8 @@ def plan_from_state(
             tx_state = states[sender.console_mac]
             group = tx_state.get(f"io.out.MOD.{sub.tx_channel}.grp")
             number = tx_state.get(f"io.out.MOD.{sub.tx_channel}.in")
-            if group is None or number is None:
-                continue
+            if group is None or not isinstance(number, int):
+                continue  # Not reported, or not understood
             plans.append(
                 PlannedName(
                     receiver,

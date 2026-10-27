@@ -15,7 +15,7 @@ from pathlib import Path
 from headhunter.discovery import DiscoveredConsole, DiscoveredDanteDevice
 
 DISPLAY_NAME_MAX = 7
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 GPIO_COUNT = 4
 
 FOH = "FOH"
@@ -38,6 +38,7 @@ CREATE TABLE consoles (
     gain_gpio      INTEGER CHECK (gain_gpio BETWEEN 1 AND {GPIO_COUNT}),
     phantom_gpio   INTEGER CHECK (phantom_gpio BETWEEN 1 AND {GPIO_COUNT})
 );
+CREATE UNIQUE INDEX consoles_display_name_nocase ON consoles (display_name COLLATE NOCASE);
 """
 
 # Upgrades from each older schema version to the next
@@ -50,6 +51,8 @@ MIGRATIONS = {
         f"ALTER TABLE consoles ADD COLUMN gain_gpio INTEGER CHECK (gain_gpio BETWEEN 1 AND {GPIO_COUNT})",
         f"ALTER TABLE consoles ADD COLUMN phantom_gpio INTEGER CHECK (phantom_gpio BETWEEN 1 AND {GPIO_COUNT})",
     ],
+    # Display names are looked up ignoring case, so they must be unique ignoring case too
+    3: ["CREATE UNIQUE INDEX consoles_display_name_nocase ON consoles (display_name COLLATE NOCASE)"],
 }
 
 
@@ -213,6 +216,13 @@ class Store:
             self._db.execute(
                 "UPDATE consoles SET role = ?, updated_at = ? WHERE console_mac = ?",
                 (role, _now(), console_mac),
+            )
+
+    def set_dante_name(self, console_mac: str, dante_name: str) -> None:
+        with self._db:
+            self._db.execute(
+                "UPDATE consoles SET dante_name = ?, updated_at = ? WHERE console_mac = ?",
+                (dante_name, _now(), console_mac),
             )
 
     def set_buttons(self, console_mac: str, gain_gpio: int | None, phantom_gpio: int | None) -> None:
