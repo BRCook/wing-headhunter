@@ -2,7 +2,7 @@
 
 Remote preamp control for Behringer Wing consoles connected over Dante.
 
-> **Status:** early development. Discovery, pairing and source naming work; gain mode, phantom power and the gain display are not built yet.
+> **Status:** early development. Source naming, gain mode, phantom power and the gain display all work, and have been tested on my Rack and Compact (see [Tested Hardware](#tested-hardware)). There is no web interface yet, so everything must be done from the command line.
 
 ## Why This Exists
 
@@ -34,13 +34,19 @@ Console B already controls the stage box preamps over AES50, so Headhunter only 
 
 Note that this isn't built for situations where there is a "Console C". It would certainly be a bad idea to give preamp control to multiple consoles; however, we may eventually add the ability to *control* multiple consoles from Console A. Personally, I have no use case for this right now, but if there is demand, it can be done.
 
+### Tested Hardware
+
+Everything in this document has been tested with a Wing Compact as Console A and a Wing Rack as Console B, using their internal Dante modules, an SD8 stage box on AES50, and firmware 3.1.1 and 3.1.2.
+
+Using a full-size Wing or a Wing Rack as Console A should work, but I don't own a full-size Wing, and I don't plan on using the Rack as the primary console, so... good luck! The only part that differs between models is the [strip light flashes](#strip-lights), which need to know how many strips each model shows at once: 12 on the Compact, 4 on the Rack, and 12, 8 and 4 across the full-size Wing's three fader banks, each of which can be on its own layer.
+
 ## Talking to the Consoles
 
 Headhunter talks to both consoles using Behringer's native protocol – the same one Wing Edit and Mixing Station use – rather than OSC. The Wing only allows one client at a time to subscribe to OSC updates, so an OSC-based Headhunter would fight with anything else listening over OSC, such as Bitfocus Companion. The native protocol has no such limit: every connection receives every change the console makes, as it happens, without subscribing to anything.
 
 Every parameter on a Wing has a path (such as `io.in.LCL.24.g` for the gain of local input 24) and the native protocol addresses parameters by a hash of that path. Headhunter calculates these hashes itself, so it never has to explore the console's parameter tree. The parameters it relies on are listed in [Console Parameters](#console-parameters).
 
-Dante subscriptions are read (and, when renaming a device, changed) using `netaudio`.
+Dante subscriptions are read using `netaudio`.
 
 ## Discovery and Pairing
 
@@ -63,6 +69,8 @@ Pairings are permanent, and are kept in a small SQLite database at `~/.local/sha
 | `dante_name`     | `WingRack`          | mDNS                       |
 | `display_name`   | `RACK`              | You (7 characters max)     |
 | `role`           | `STAGE`             | You (`FOH` or `STAGE`)     |
+| `gain_gpio`      | `3`                 | You (FOH consoles only)    |
+| `phantom_gpio`   | `4`                 | You (FOH consoles only)    |
 
 A few rules apply:
 
@@ -80,15 +88,51 @@ With the Wing's internal Dante module, Dante must be set to **switched** mode in
 
 With a Dante *expansion card*, Dante has its own ports, separate from the console's; the machine running Headhunter must then be able to reach both networks.
 
-Headhunter cannot see either setting from the console, but it will tell you if it cannot find a paired console's Dante card, or if a console has no Dante module fitted.
+Headhunter cannot see either setting from the console. If it cannot find a paired console's Dante card, that console's Dante inputs simply are not named or controlled; `headhunter discover` is the quickest way to check what Headhunter can see.
 
 If the machine running Headhunter has a firewall, it must allow UDP traffic *from* port 2222 on the console network; Wing consoles reply to discovery from that port. With `ufw`, for example:
 
 ```sh
-    sudo ufw allow proto udp from <your subnet> port 2222 comment 'Wing discovery replies'
+sudo ufw allow proto udp from <your subnet> port 2222 comment 'Wing discovery replies'
 ```
 
-mDNS (UDP port 5353) must also be allowed, which it usually already is if Dante Controller works on the same machine.
+mDNS (UDP port 5353) must also be allowed, which it usually already is if Dante Controller works on the same machine, but it's worth checking.
+
+## Getting Started
+
+Headhunter needs Python 3.13 or newer. Install it into a virtual environment:
+
+```sh
+git clone https://github.com/BRCook/wing-headhunter.git
+cd wing-headhunter
+python -m venv .venv
+source .venv/bin/activate    # .venv/bin/activate.fish in fish
+pip install -e .
+```
+
+Then set it up, once:
+
+```sh
+headhunter discover                          # Check that every console and Dante card can be seen
+headhunter pair                              # Pair each console with its Dante card
+headhunter role COMPACT FOH                  # Mark your FOH console
+headhunter buttons COMPACT --gain 3 --phantom 4   # Choose its gain mode and phantom power GPIOs
+```
+
+`headhunter dante` shows what each paired console receives over Dante, and `headhunter names` shows the source names Headhunter would write, without writing them.
+
+Finally, run it:
+
+```sh
+headhunter run --write-names --write-gain
+```
+
+Headhunter is careful by default. Without `--write-names` and `--write-gain`, it does everything except change the consoles, and logs what it *would* have done; this is a good way to check a new setup before letting it loose. Press Ctrl+C to stop it.
+
+A few more options:
+
+- `--restore-after SECONDS` changes how long trim must be still before it is restored (see [Gain Mode](#2-gain-mode)).
+- `--stats MINUTES` logs Headhunter's memory and resource use every few minutes.
 
 ## How It Works
 
@@ -121,7 +165,7 @@ where `<DEVICE>` is the name of the remote console in Headhunter, `<TYPE>` is on
 
 Buses, mains, matrices, FX sends and monitors are stereo, and a Wing routes each side separately; input 1 of the bus group is bus 1 left, input 2 is bus 1 right, and so on. For these, `<NN>` is the actual bus (or main, or matrix…) number, and `<SIDE>` is `L` or `R`; so bus 1 right is `RACK-BS01R-HH`, not `RACK-BS02-HH`. Everything else is mono, and has no `<SIDE>`.
 
-The longest possible suffix (a stereo source, such as `-BS16R-HH`) is 9 characters, so device names are limited to **7 characters**. This is enforced when the configuration is loaded; Headhunter will truncate names if they are longer than this, so be careful!
+The longest possible suffix (a stereo source, such as `-BS16R-HH`) is 9 characters, so device names are limited to **7 characters**. Headhunter will truncate longer names when you choose them, so be careful!
 
 #### Abbreviations
 
@@ -164,7 +208,7 @@ Headhunter has three names for each console:
 2. The console's Dante name, which is how it is identified by `netaudio`.
 3. The console's Headhunter name, which is how Headhunter identifies it when naming sources.
 
-Headhunter can change a remote console's Headhunter name *and* its Dante name. Note that Dante subscriptions are stored based on the Dante name; changing the Dante name would break any subscription pointing at it. Headhunter will automatically update any console's subscriptions to the new Dante name.
+Headhunter will eventually be able to change a remote console's Headhunter name *and* its Dante name. This is not built yet. Note that Dante subscriptions are stored based on the Dante name, so changing the Dante name would break any subscription pointing at it; when this is built, Headhunter will update every console's subscriptions to the new Dante name as part of the rename.
 
 Headhunter does not change a console's real name. It could, but the real name is how the console identifies itself to everything else on the network, so we leave it to you to change on the console itself.
 
@@ -172,12 +216,14 @@ Headhunter does not change a console's real name. It could, but the real name is
 
 A custom control button on Console A toggles gain mode (see [Buttons](#buttons)). While gain mode is off, Console A functions normally; trim is trim. With gain mode turned on, the trim knob adjusts the gain of the remote preamp feeding the selected channel.
 
+Every time gain mode turns on or off, the "colour LEDs" on Console A's selected fader layer flash white (see [Strip Lights](#strip-lights)) to alert you that gain mode has changed. Whenever you see this flash, **check the GPIO button** to ensure you haven't accidentally enabled or disabled gain mode!
+
 When gain mode is enabled, Headhunter takes a snapshot of every channel's trim on Console A. Nothing changes on the console; your trim settings stay exactly where they are, and all adjustments are made relative to them. Then, when you turn the trim knob on the selected channel (any input channel or aux channel; the console reports which one is selected the moment you press its Select button):
 
 1. Headhunter follows the channel's active source (main or alt, whichever is in use) back to the remote preamp, as described above.
 2. It reads the preamp's current gain.
 3. Trim movement is accumulated 1:1 with gain; every time the accumulated trim reaches one full gain step for that preamp, that step is applied to the preamp, and the remainder is carried.
-4. Once the trim knob has been still for three seconds (the exact timing can be changed in Headhunter's settings), Headhunter restores the channel's trim to its snapshot value. Any remainder smaller than one gain step is discarded. For example, suppose a channel's trim is at +10 dB when you enable gain mode. You turn the knob up to +12.5 dB; the console shows +12.5 dB, and Headhunter adds 2.5 dB of gain on Console B. Three seconds after you stop, trim returns to +10 dB, and you are left with exactly 2.5 dB more than you started with -- at the preamp!
+4. Once the trim knob has been still for two seconds (change this with `--restore-after`), Headhunter restores the channel's trim to its snapshot value. Any remainder smaller than one gain step is discarded. For example, suppose a channel's trim is at +10 dB when you enable gain mode. You turn the knob up to +12.5 dB; the console shows +12.5 dB, and Headhunter adds 2.5 dB of gain on Console B. Two seconds after you stop, trim returns to +10 dB, and you are left with exactly 2.5 dB more than you started with -- at the preamp!
 
 Trim ranges from −18 to +18 dB in 0.1 dB increments, while preamps move in larger steps. A preamp's range and step size depend on the hardware, so Headhunter asks the console for them rather than assuming anything. For example, on current firmware:
 
@@ -196,46 +242,64 @@ Trim cannot go past ±18 dB, so if a channel's trim is already at +18 dB, the kn
 
 A few rules keep this safe:
 
-- Only the selected channel counts. Trim changes on any other channel – snapshot and scene recalls, Mixing Station, anything else – are ignored. However, Headhunter does *not* interfere with any trim changes made outside its scope, so if you make a change in, say, Mixing Station, Headhunter will not reset the trim for you. This means you should never be adjusting gain on a channel with Headhunter while also making changes to that channel from another connection!
-- Channels without remote gain are ignored. If the selected channel's source has no preamp (see the table above), or is not a Dante input from a known device, adjusting trim does exactly what it normally does. 
+- Only the selected channel counts. Trim changes on any other channel – snapshot and scene recalls, Mixing Station, anything else – are treated as real trim changes: Headhunter does not act on them, and remembers them as that channel's new trim, so a later restore never undoes them. This means you should never be adjusting gain on a channel with Headhunter while also making changes to that channel from another connection!
+- Channels without remote gain are ignored. If the selected channel's source has no preamp (see the table above), or is not a Dante input from a known device, adjusting trim does exactly what it normally does.
 
-Disabling gain mode returns the trim knob to normal behaviour. If an adjustment is still in progress, it is **cancelled** and trim is restored immediately. Gain steps already sent to Console B stay applied; only the remainder is discarded.
+An adjustment is **cancelled**, and trim restored immediately, if you select another channel, turn gain mode off, or Console B drops off the network. Gain steps already sent to Console B stay applied; only the remainder is discarded.
 
-> **Don't use your ears for this, use your eyes.** While you are adjusting gain, the trim you dialled in hasn't been restored yet, so you hear the trim change and the gain change stacked on top of each other – roughly twice what you asked for. Once the knob has been still for three seconds (or however long you set), trim snaps back and the volume drops to its real level. Watch the gain on the scribble strip, and wait for trim to be restored before judging the volume by ear. Since each step is effectively doubled before a reset, the input meter on Console A may read high during an adjustment, so it is not a reliable warning.
+> **Don't use your ears for this, use your eyes.** While you are adjusting gain, the trim you dialled in hasn't been restored yet, so you hear the trim change and the gain change stacked on top of each other – roughly twice what you asked for. Once the knob has been still for two seconds (or however long you set), trim snaps back and the volume drops to its real level. Watch the gain on the scribble strip, and wait for trim to be restored before judging the volume by ear. Since each step is effectively doubled before a reset, the input meter on Console A may read high during an adjustment, so it is not a reliable warning.
 
 ### 3. Phantom Power
 
 A second custom control button on Console A controls +48 V on the remote preamp. This button must be momentary (see [Buttons](#buttons)), and only works while gain mode is on, so it cannot be triggered by accident during normal mixing.
 
-To toggle phantom power on the selected channel's remote preamp, press and hold the button for two seconds, matching the console's own behaviour. Releasing it sooner does nothing. When Headhunter has changed phantom power, it confirms by flashing the button:
+To toggle phantom power on the selected channel's remote preamp, press and hold the button for two seconds, matching the console's own behaviour. Releasing it sooner, or selecting another channel while holding it, does nothing. When Headhunter has changed phantom power, it confirms by flashing the button:
 
 - **Five quick flashes:** phantom power is now **on**.
-- **Three slow flashes:** phantom power is now **off**. 
+- **Three slow flashes:** phantom power is now **off**.
 
-No flash means nothing changed. The current phantom power state is also shown on the scribble strip, alongside the gain.
+At the same time, the channel strip's "colour LED" flashes red (see [Strip Lights](#strip-lights)), whichever way phantom power went. No flash means nothing changed. The current phantom power state is also shown on the scribble strip, alongside the gain.
 
-Releasing the button still registers normally, even mid-flash.
+The button can be released mid-flash; you do not need to hold it down after the initial two seconds.
 
 ### Buttons
 
-Headhunter's two buttons are custom control buttons assigned to the console's GPIOs. Headhunter reads each GPIO's state over the network, so any custom control button assigned to a GPIO will do:
+Headhunter's two buttons are custom control buttons assigned to the console's GPIOs. Headhunter reads each GPIO's state over the network, so any custom control button assigned to a GPIO will do. Tell Headhunter which GPIOs you chose with `headhunter buttons` (see [Getting Started](#getting-started)).
 
 - **Gain mode** uses a toggle button.
 - **Phantom power** uses a momentary button, so that Headhunter can tell how long it is held.
 
 > **Be careful which GPIOs you use.** A GPIO's state is not just a light on the console; it drives the GPIO jack on the back. Anything wired to that GPIO will switch every time you toggle gain mode, and every time Headhunter flashes the phantom power button. Use GPIOs that have nothing connected to them. On the Compact, only two of the four GPIOs have physical connections, so the other two are ideal.
 
+### Strip Lights
+
+Headhunter flashes the channel strip "colour LED" on Console A to confirm what it has done:
+
+- **White,** on every channel on the selected layer, whenever gain mode turns on or off.
+- **Red,** on the selected channel strip only, whenever phantom power turns on or off.
+
+Channels, aux channels, buses, mains, matrices, DCAs and sends on fader all flash, including on user layers. Channels with nothing input assigned have no light to flash and will remain dark.
+
 ### Gain Display
 
-Since trim is always restored, Console A never shows the actual preamp gain. To fix this, Headhunter temporarily writes the current gain and phantom power state into the selected channel's name on the scribble strip whenever either changes, and restores the original name after a few seconds.
+Since trim is always restored, Console A never shows the actual preamp gain. To fix this, whenever Headhunter changes a preamp's gain or phantom power, it temporarily writes them into the channel's name, and hides the channel's icon so the text has the whole scribble strip:
 
-If Headhunter crashes or a snapshot is saved while a temporary name is showing, the temporary name would stick. Since Headhunter never restores anything from a previous session (see [Startup](#startup)), there is no way to prevent this; you will need to fix the name by hand.
+```
+27.5dB
+27.5dB ! 48V !
+```
+
+The exclamation marks make phantom power hard to miss. Three seconds after the last change, the channel's real name and icon come back. If you rename the channel or change its icon while the gain is showing, your change is kept.
+
+Channels with **Link customization to source** turned on show their source's name rather than their own, so they get no gain display; gain mode still works on them.
+
+The display is taken down immediately if you turn gain mode off, if Console B drops off the network, or when Headhunter is stopped. If Headhunter crashes, or a snapshot is saved while the gain is showing, the gain display would stick. Since Headhunter never restores anything from a previous session (see [Startup](#startup)), there is no way to prevent this; you will need to fix the name by hand.
 
 ### Startup
 
-Headhunter always starts with a blank slate. It remembers its configuration – which consoles are paired with which Dante cards, what to call them, and your settings – because you set those deliberately (see [Discovery and Pairing](#discovery-and-pairing)). Everything else is session state: trim snapshots, gain mode, temporary channel names, and adjustments in progress. Session state is never stored, and never restored from a previous session; what if it was still holding on to something from a show two weeks ago?
+Headhunter always starts with a blank slate. It remembers its configuration – which consoles are paired with which Dante cards, what to call them, and your settings – because you set those deliberately (see [Discovery and Pairing](#discovery-and-pairing)). Everything else is session state: trim snapshots, gain mode, gain displays, and adjustments in progress. Session state is never stored, and never restored from a previous session; what if it was still holding on to something from a show two weeks ago?
 
-When it starts, Headhunter assumes gain mode is off, regardless of what Console A shows. Gain mode only turns on when Headhunter sees the gain mode button go from off to on. If the button was left on – say, because Headhunter crashed mid-show – you will need to press it twice: once to turn it off, and once more to turn it back on. This may be inconvenient, but Headhunter should never *intrude* on a console.
+When it starts, Headhunter assumes gain mode is off, regardless of what Console A shows. Gain mode only turns on when Headhunter sees the gain mode button go from off to on. If the button was left on – say, because Headhunter crashed mid-show – Headhunter logs that it is ignoring it, and you will need to press it twice: once to turn it off, which does nothing at all, and once more to turn gain mode on. This may be inconvenient, but Headhunter should never *intrude* on a console.
 
 Anything in progress when Headhunter stopped is gone. Gain steps that were already sent to Console B stay applied; trim movement that had not yet added up to a full step is lost, and will never be applied later.
 
@@ -247,14 +311,17 @@ For reference, these are the console parameters Headhunter depends on. `N` is a 
 
 | Parameter                       | Console | Meaning                                               |
 |---------------------------------|---------|-------------------------------------------------------|
-| `$ctl.$stat.selidx`             | A       | The selected channel                                  |
+| `$ctl.$stat.selidx`             | A       | The selected strip: 1–40 are channels, 41–48 aux channels, 49 and up buses, mains and matrices |
 | `ch.N.in.set.trim`              | A       | Channel trim                                          |
 | `ch.N.in.set.altsrc`            | A       | Whether the channel is using its alt source           |
 | `ch.N.in.conn.grp`, `.in`       | A       | The channel's main source                             |
 | `ch.N.in.conn.altgrp`, `.altin` | A       | The channel's alt source                              |
-| `ch.N.name`                     | A       | Channel name, used for the gain display               |
+| `ch.N.name`, `.icon`            | A       | Channel name and icon, used for the gain display      |
 | `ch.N.$name`                    | A       | The name the channel actually displays                |
 | `ch.N.clink`                    | A       | Link customization to source                          |
+| `ch.N.col`, `.led`              | A       | Strip colour and light; buses, mains, matrices and DCAs have the same, for the strip light flashes |
+| `$ctl.layer.<section>.sel`      | A       | The layer on each fader section, e.g. `CMPCT` on the Compact |
+| `$ctl.layer.<section>.<layer>.<position>.type`, `.i` | A | What is on each fader of a layer |
 | `io.in.MOD.N.name`              | A       | Dante source names, set by Headhunter                 |
 | `$ctl.gpio.N.gpstate`           | A       | Gain mode and phantom power buttons                   |
 | `io.out.MOD.N.grp`, `.in`       | B       | What Console B sends to each Dante output             |
@@ -270,12 +337,12 @@ If `tcplock` is on, Headhunter cannot change anything.
 
 Headhunter should never leave either console in a strange state. In particular:
 
-- If Console B or the Dante network becomes unreachable, gain mode stops acting immediately; trims are restored, and channel names are restored.
-- If Headhunter itself crashes, the trim knob already behaves normally, since gain mode only exists inside Headhunter. At most one adjustment's worth of trim may be left unrestored, and any temporary channel name will stick. When Headhunter is started again, it follows the rules in [Startup](#startup).
-- Headhunter never applies a gain change it cannot confirm. If a write to Console B fails, the change is dropped, not retried later.
+- If Console B or the Dante network becomes unreachable, gain mode stops acting immediately; trims are restored, and channel names are restored. Headhunter keeps looking for the missing console, and picks up where it left off when it comes back, at whatever IP address it turns up at.
+- If Headhunter itself crashes, the trim knob already behaves normally, since gain mode only exists inside Headhunter. At most one adjustment's worth of trim may be left unrestored, and any gain display or strip light flash in progress will stick. When Headhunter is started again, it follows the rules in [Startup](#startup).
+- Headhunter never applies a change it cannot confirm. Every change to gain, phantom power or trim is read back from the console; if it did not take, the change is dropped, not retried later.
 
 ## Requirements
 
 - Two Behringer Wing consoles, each with a Dante module, on the same network, with Dante in switched mode (see [Network Requirements](#network-requirements)).
 - A computer on that network to run Headhunter (we will be planning for Alpine and Debian/Ubuntu).
-- Python 3.13, with `netaudio` and `zeroconf`.
+- Python 3.13 or newer. `pip` installs everything else, including `netaudio` and `zeroconf`.

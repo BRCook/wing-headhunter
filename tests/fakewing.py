@@ -21,8 +21,10 @@ from headhunter.native import (
 class FakeWing:
     """Answers reads, accepts writes, and can push changes and drop connections."""
 
-    def __init__(self, values: dict) -> None:
+    def __init__(self, values: dict, ranges: dict | None = None) -> None:
+        """ranges maps parameter paths to (minimum, maximum, steps), for definition requests."""
         self.values = {"$syscfg.consolename": "FakeWing", **values}
+        self.ranges = ranges or {}
         self._paths = {wing_hash(path): path for path in self.values}
         self._writers: list[asyncio.StreamWriter] = []
         self._server: asyncio.Server | None = None
@@ -59,6 +61,18 @@ class FakeWing:
         except ConnectionError:
             pass
 
+    def _definition(self, hash_: int, path: str) -> bytes:
+        """A linear float definition in dB, followed by the end of the reply."""
+        minimum, maximum, steps = self.ranges[path]
+        name = path.rsplit(".", 1)[1].encode()
+        body = (
+            struct.pack(">IIH", 0, hash_, 0)
+            + bytes([len(name)]) + name + bytes([4]) + b"GAIN"
+            + struct.pack(">H", 0x11)
+            + struct.pack(">ffi", minimum, maximum, steps)
+        )
+        return b"\xdf" + struct.pack(">H", len(body)) + body + bytes([TOKEN_END])
+
     def _process(self, data: bytes, writer: asyncio.StreamWriter) -> None:
         offset = 0
         while offset < len(data):
@@ -67,6 +81,8 @@ class FakeWing:
                 continue
             hash_ = struct.unpack_from(">I", data, offset + 1)[0]
             token = data[offset + 5]
+            if hash_ not in self._paths:  # Values may have been added since the console was created
+                self._paths = {wing_hash(path): path for path in self.values}
             path = self._paths.get(hash_)
             if token == TOKEN_DATA_REQUEST:
                 if path is not None:
@@ -74,6 +90,8 @@ class FakeWing:
                     writer.write(encode_frame(AUDIO_ENGINE_CHANNEL, reply))
                 offset += 6
             elif token == TOKEN_DEFINITION_REQUEST:
+                if path in self.ranges:
+                    writer.write(encode_frame(AUDIO_ENGINE_CHANNEL, self._definition(hash_, path)))
                 offset += 6
             else:
                 length = _value_length(data, offset + 5)

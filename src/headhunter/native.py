@@ -509,6 +509,11 @@ class NativeClient:
             self._child_requests.pop(hash_, None)
         return found
 
+    async def flush(self) -> None:
+        """Wait until everything written so far has been handed to the network."""
+        if self._writer is not None and not self.closed.is_set():
+            await self._writer.drain()
+
     def set(self, path: str, value: Value) -> None:
         """Write a parameter. This changes the console; use with care."""
         self._send(bytes([TOKEN_HASH]) + struct.pack(">I", wing_hash(path)) + encode_value(value))

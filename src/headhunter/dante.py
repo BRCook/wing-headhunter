@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from headhunter.store import Pairing
 
 NETAUDIO_TIMEOUT = 30.0
+RUNS = 0  # How many times netaudio has been run, for the stats
 
 
 class NetaudioError(RuntimeError):
@@ -36,6 +37,8 @@ class Subscription:
 
 async def run_netaudio(macs: list[str], *command: str) -> object:
     """Run a netaudio command against the given devices and return its JSON."""
+    global RUNS
+    RUNS += 1
     args = [sys.executable, "-m", "netaudio", "--json"]
     for mac in macs:
         args += ["-m", mac]

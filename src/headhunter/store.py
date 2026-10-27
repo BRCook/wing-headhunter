@@ -15,7 +15,8 @@ from pathlib import Path
 from headhunter.discovery import DiscoveredConsole, DiscoveredDanteDevice
 
 DISPLAY_NAME_MAX = 7
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
+GPIO_COUNT = 4
 
 FOH = "FOH"
 STAGE = "STAGE"
@@ -33,14 +34,22 @@ CREATE TABLE consoles (
         CHECK (length(display_name) BETWEEN 1 AND {DISPLAY_NAME_MAX}),
     created_at     TEXT NOT NULL,
     updated_at     TEXT NOT NULL,
-    role           TEXT NOT NULL DEFAULT '{STAGE}' CHECK (role IN ('{FOH}', '{STAGE}'))
+    role           TEXT NOT NULL DEFAULT '{STAGE}' CHECK (role IN ('{FOH}', '{STAGE}')),
+    gain_gpio      INTEGER CHECK (gain_gpio BETWEEN 1 AND {GPIO_COUNT}),
+    phantom_gpio   INTEGER CHECK (phantom_gpio BETWEEN 1 AND {GPIO_COUNT})
 );
 """
 
 # Upgrades from each older schema version to the next
 MIGRATIONS = {
-    1: f"ALTER TABLE consoles ADD COLUMN role TEXT NOT NULL DEFAULT '{STAGE}' "
-    f"CHECK (role IN ('{FOH}', '{STAGE}'))",
+    1: [
+        f"ALTER TABLE consoles ADD COLUMN role TEXT NOT NULL DEFAULT '{STAGE}' "
+        f"CHECK (role IN ('{FOH}', '{STAGE}'))",
+    ],
+    2: [
+        f"ALTER TABLE consoles ADD COLUMN gain_gpio INTEGER CHECK (gain_gpio BETWEEN 1 AND {GPIO_COUNT})",
+        f"ALTER TABLE consoles ADD COLUMN phantom_gpio INTEGER CHECK (phantom_gpio BETWEEN 1 AND {GPIO_COUNT})",
+    ],
 }
 
 
@@ -74,6 +83,8 @@ class Pairing:
     dante_name: str
     display_name: str
     role: str = STAGE
+    gain_gpio: int | None = None  # The FOH console's gain mode button
+    phantom_gpio: int | None = None  # The FOH console's phantom power button
 
     @property
     def is_foh(self) -> bool:
@@ -113,7 +124,8 @@ class Store:
             )
         while version < SCHEMA_VERSION:
             with self._db:
-                self._db.execute(MIGRATIONS[version])
+                for statement in MIGRATIONS[version]:
+                    self._db.execute(statement)
                 version += 1
                 self._db.execute(f"PRAGMA user_version = {version}")
 
@@ -203,6 +215,19 @@ class Store:
                 (role, _now(), console_mac),
             )
 
+    def set_buttons(self, console_mac: str, gain_gpio: int | None, phantom_gpio: int | None) -> None:
+        """Choose which GPIOs are the gain mode and phantom power buttons."""
+        for gpio in (gain_gpio, phantom_gpio):
+            if gpio is not None and not 1 <= gpio <= GPIO_COUNT:
+                raise ValueError(f"GPIOs are numbered 1 to {GPIO_COUNT}")
+        if gain_gpio is not None and gain_gpio == phantom_gpio:
+            raise ValueError("Gain mode and phantom power need different buttons")
+        with self._db:
+            self._db.execute(
+                "UPDATE consoles SET gain_gpio = ?, phantom_gpio = ?, updated_at = ? WHERE console_mac = ?",
+                (gain_gpio, phantom_gpio, _now(), console_mac),
+            )
+
     def by_display_name(self, display_name: str) -> Pairing | None:
         """Find a pairing by display name, ignoring case."""
         return next(
@@ -258,4 +283,6 @@ def _to_pairing(row: sqlite3.Row) -> Pairing:
         dante_name=row["dante_name"],
         display_name=row["display_name"],
         role=row["role"],
+        gain_gpio=row["gain_gpio"],
+        phantom_gpio=row["phantom_gpio"],
     )

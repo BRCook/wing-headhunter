@@ -87,3 +87,34 @@ def test_newer_databases_are_refused(tmp_path):
     db.close()
     with pytest.raises(RuntimeError):
         Store(path)
+
+
+def test_buttons(store):
+    store.add(COMPACT, COMPACT_CARD, "COMPACT", FOH)
+    store.set_buttons(COMPACT.mac, 3, 4)
+    pairing = store.by_display_name("COMPACT")
+    assert (pairing.gain_gpio, pairing.phantom_gpio) == (3, 4)
+    for gain, phantom in [(5, None), (3, 3), (0, 1)]:
+        with pytest.raises(ValueError):
+            store.set_buttons(COMPACT.mac, gain, phantom)
+
+
+def test_version_2_databases_are_upgraded(tmp_path):
+    path = tmp_path / "v2.db"
+    db = sqlite3.connect(path)
+    db.executescript(
+        """
+        CREATE TABLE consoles (console_mac TEXT PRIMARY KEY, console_name TEXT NOT NULL,
+            console_model TEXT NOT NULL, console_serial TEXT NOT NULL, dante_mac TEXT NOT NULL UNIQUE,
+            dante_name TEXT NOT NULL, display_name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'STAGE');
+        INSERT INTO consoles VALUES ('m', 'n', 'wing-compact', 's', 'd', 'WingCompact', 'COMPACT', 't', 't', 'FOH');
+        PRAGMA user_version = 2;
+        """
+    )
+    db.commit()
+    db.close()
+    with Store(path) as store:
+        pairing = store.pairings()[0]
+        assert (pairing.role, pairing.gain_gpio, pairing.phantom_gpio) == (FOH, None, None)
+        store.set_buttons("m", 3, 4)

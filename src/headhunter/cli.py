@@ -5,7 +5,8 @@
     headhunter role <name> <FOH|STAGE>  Mark a paired console as FOH or stage
     headhunter dante                  Show what each paired console receives over Dante
     headhunter names [--write]        Name Dante sources on FOH consoles (dry run without --write)
-    headhunter run [--write-names]    Keep running, and keep names up to date as things change
+    headhunter buttons <name> --gain N [--phantom N]  Choose a FOH console's GPIO buttons
+    headhunter run [--write-names] [--write-gain]  Keep running: keep names up to date, and run gain mode
 """
 
 import argparse
@@ -75,13 +76,28 @@ def dante(args: argparse.Namespace) -> None:
             print(f"  Dante in {sub.rx_channel:2}  <-  {source} Dante out {tx}{state}")
 
 
+def buttons(args: argparse.Namespace) -> None:
+    with Store() as store:
+        pairing = store.by_display_name(args.display_name)
+        if pairing is None:
+            raise SystemExit(f"No paired console called {args.display_name!r}")
+        try:
+            store.set_buttons(pairing.console_mac, args.gain, args.phantom)
+        except ValueError as error:
+            raise SystemExit(str(error)) from None
+    phantom = f", phantom power on GPIO {args.phantom}" if args.phantom else ""
+    print(f"{pairing.display_name}: gain mode on GPIO {args.gain}{phantom}.")
+    if not pairing.is_foh:
+        print(f"Note that {pairing.display_name} is not marked FOH, so its buttons will not be used.")
+
+
 def names(args: argparse.Namespace) -> None:
     asyncio.run(run_naming(args.write))
 
 
 def run(args: argparse.Namespace) -> None:
     with contextlib.suppress(KeyboardInterrupt):
-        asyncio.run(run_engine(args.write_names))
+        asyncio.run(run_engine(args.write_names, args.write_gain, args.restore_after, args.stats))
 
 
 def main() -> None:
@@ -106,8 +122,17 @@ def main() -> None:
     names_parser.add_argument("--write", action="store_true", help="Write the names (without this, it is a dry run)")
     names_parser.set_defaults(func=names)
 
+    buttons_parser = commands.add_parser("buttons", help="Choose a FOH console's gain mode and phantom power GPIOs")
+    buttons_parser.add_argument("display_name", help="The FOH console's display name, e.g. COMPACT")
+    buttons_parser.add_argument("--gain", type=int, required=True, metavar="GPIO", help="GPIO for the gain mode button, 1 to 4")
+    buttons_parser.add_argument("--phantom", type=int, metavar="GPIO", help="GPIO for the phantom power button, 1 to 4")
+    buttons_parser.set_defaults(func=buttons)
+
     run_parser = commands.add_parser("run", help="Keep running, and keep names up to date as things change")
     run_parser.add_argument("--write-names", action="store_true", help="Write names (without this, only report them)")
+    run_parser.add_argument("--write-gain", action="store_true", help="Change preamp gain and restore trim in gain mode (without this, only report it)")
+    run_parser.add_argument("--stats", type=float, metavar="MINUTES", help="Log memory and resource use every few minutes, to spot leaks")
+    run_parser.add_argument("--restore-after", type=float, metavar="SECONDS", help="How long trim must be still before it is restored (default 2)")
     run_parser.set_defaults(func=run)
 
     args = parser.parse_args()
