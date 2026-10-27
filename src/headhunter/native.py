@@ -88,7 +88,7 @@ def wing_hash(path: str) -> int:
     hash_ = 0xCB21C6BE
     offset = 0
     while len(data) - offset >= 4:
-        a, b, c, d = data[offset: offset + 4]
+        a, b, c, d = data[offset : offset + 4]
         hash_ = _mix(hash_, (a << 24) | (b << 16) | (c << 8) | d)
         offset += 4
     if offset < len(data):
@@ -194,8 +194,7 @@ def _value_length(data: bytes, offset: int) -> int:
         return 3
     if token in (TOKEN_INT32, TOKEN_FLOAT32, TOKEN_RAW_FLOAT32, TOKEN_HASH):
         return 5
-    if token in (TOKEN_CLICK, TOKEN_ROOT, TOKEN_PARENT, TOKEN_DATA_REQUEST,
-                 TOKEN_DEFINITION_REQUEST, TOKEN_END):
+    if token in (TOKEN_CLICK, TOKEN_ROOT, TOKEN_PARENT, TOKEN_DATA_REQUEST, TOKEN_DEFINITION_REQUEST, TOKEN_END):
         return 1
     if token == TOKEN_STEP:
         return 2
@@ -209,16 +208,14 @@ def _parse_value(data: bytes, offset: int) -> Value:
     if token <= 0x7F:
         return token - 0x40 + 1  # Node index
     if token <= 0xBF:
-        return data[offset + 1: offset + token - 0x80 + 2].decode("utf-8",
-                                                                  "replace")
+        return data[offset + 1 : offset + token - 0x80 + 2].decode("utf-8", "replace")
     if 0xC0 <= token <= 0xCF:
-        return data[offset + 1: offset + token - 0xC0 + 2].decode("utf-8",
-                                                                  "replace")
+        return data[offset + 1 : offset + token - 0xC0 + 2].decode("utf-8", "replace")
     if token == TOKEN_EMPTY_STRING:
         return ""
     if token == TOKEN_STRING_256:
         length = data[offset + 1] + 1
-        return data[offset + 2: offset + 2 + length].decode("utf-8", "replace")
+        return data[offset + 2 : offset + 2 + length].decode("utf-8", "replace")
     if token == TOKEN_NODE_INDEX_65536:
         return struct.unpack_from(">H", data, offset + 1)[0] + 1
     if token == TOKEN_INT16:
@@ -251,8 +248,7 @@ TYPE_NAMES = {
     6: "float enum",
     7: "string",
 }
-UNIT_NAMES = {0: "", 1: "dB", 2: "%", 3: "ms", 4: "Hz", 5: "m", 6: "s",
-              7: "oct"}
+UNIT_NAMES = {0: "", 1: "dB", 2: "%", 3: "ms", 4: "Hz", 5: "m", 6: "s", 7: "oct"}
 
 
 @dataclass(frozen=True)
@@ -308,20 +304,17 @@ class EndRecord:
 Record = ValueRecord | DefinitionRecord | EndRecord
 
 
-def _parse_definition(data: bytes, offset: int,
-                      length: int) -> DefinitionRecord | None:
+def _parse_definition(data: bytes, offset: int, length: int) -> DefinitionRecord | None:
     body = data[offset:length]
     try:
         position = 3 if struct.unpack_from(">H", body, 1)[0] else 7
         parent, hash_ = struct.unpack_from(">II", body, position)
         position += 10  # parent, hash, index
         name_length = body[position]
-        name = body[position + 1: position + 1 + name_length].decode("utf-8",
-                                                                     "replace")
+        name = body[position + 1 : position + 1 + name_length].decode("utf-8", "replace")
         position += 1 + name_length
         long_length = body[position]
-        long_name = body[position + 1: position + 1 + long_length].decode(
-            "utf-8", "replace")
+        long_name = body[position + 1 : position + 1 + long_length].decode("utf-8", "replace")
         position += 1 + long_length
         flags = struct.unpack_from(">H", body, position)[0]
         position += 2
@@ -339,9 +332,7 @@ def _parse_definition(data: bytes, offset: int,
             items = []
             for _ in range(count):
                 length = body[position]
-                items.append(
-                    body[position + 1: position + 1 + length].decode("utf-8",
-                                                                     "replace"))
+                items.append(body[position + 1 : position + 1 + length].decode("utf-8", "replace"))
                 position += 1 + length
                 position += 1 + body[position]  # Skip the long item name
             details = {"items": tuple(items)}
@@ -356,8 +347,7 @@ def _parse_definition(data: bytes, offset: int,
                 position += 1 + body[position]
             details = {"items": tuple(items)}
         elif kind == 7:
-            details = {
-                "max_length": struct.unpack_from(">H", body, position)[0]}
+            details = {"max_length": struct.unpack_from(">H", body, position)[0]}
     except (struct.error, IndexError):
         return None
     return DefinitionRecord(parent, hash_, name, long_name, flags, **details)
@@ -383,10 +373,8 @@ class RecordDecoder:
                     break
                 hash_ = struct.unpack_from(">I", data, offset + 1)[0]
                 value_token = data[offset + 5]
-                if value_token not in (TOKEN_DATA_REQUEST,
-                                       TOKEN_DEFINITION_REQUEST):
-                    records.append(
-                        ValueRecord(hash_, _parse_value(data, offset + 5)))
+                if value_token not in (TOKEN_DATA_REQUEST, TOKEN_DEFINITION_REQUEST):
+                    records.append(ValueRecord(hash_, _parse_value(data, offset + 5)))
                 offset += 5 + value_length
             elif token == TOKEN_DEFINITION:
                 if len(data) - offset < 3:
@@ -441,10 +429,8 @@ class NativeClient:
         self._tasks: list[asyncio.Task] = []
         self._events: asyncio.Queue[ValueRecord] = asyncio.Queue()
         self._pending_values: dict[int, list[asyncio.Future[Value]]] = {}
-        self._pending_definitions: dict[
-            int, list[asyncio.Future[DefinitionRecord]]] = {}
-        self._child_requests: dict[
-            int, tuple[list[DefinitionRecord], asyncio.Future]] = {}
+        self._pending_definitions: dict[int, list[asyncio.Future[DefinitionRecord]]] = {}
+        self._child_requests: dict[int, tuple[list[DefinitionRecord], asyncio.Future]] = {}
 
     async def connect(self, timeout: float = 3.0) -> None:
         self._reader, self._writer = await asyncio.wait_for(
@@ -483,40 +469,33 @@ class NativeClient:
     async def get(self, path: str, timeout: float = 2.0) -> Value:
         """Read a parameter's current value."""
         hash_ = wing_hash(path)
-        future: asyncio.Future[
-            Value] = asyncio.get_running_loop().create_future()
+        future: asyncio.Future[Value] = asyncio.get_running_loop().create_future()
         self._pending_values.setdefault(hash_, []).append(future)
-        self._send(bytes([TOKEN_HASH]) + struct.pack(">I", hash_) + bytes(
-            [TOKEN_DATA_REQUEST]))
+        self._send(bytes([TOKEN_HASH]) + struct.pack(">I", hash_) + bytes([TOKEN_DATA_REQUEST]))
         try:
             return await asyncio.wait_for(future, timeout)
         finally:
             with contextlib.suppress(ValueError):
                 self._pending_values.get(hash_, []).remove(future)
 
-    async def define(self, hash_: int,
-                     timeout: float = 2.0) -> DefinitionRecord:
+    async def define(self, hash_: int, timeout: float = 2.0) -> DefinitionRecord:
         """Read a parameter's definition (name, long name, type) by hash."""
-        future: asyncio.Future[
-            DefinitionRecord] = asyncio.get_running_loop().create_future()
+        future: asyncio.Future[DefinitionRecord] = asyncio.get_running_loop().create_future()
         self._pending_definitions.setdefault(hash_, []).append(future)
-        self._send(bytes([TOKEN_HASH]) + struct.pack(">I", hash_) + bytes(
-            [TOKEN_DEFINITION_REQUEST]))
+        self._send(bytes([TOKEN_HASH]) + struct.pack(">I", hash_) + bytes([TOKEN_DEFINITION_REQUEST]))
         try:
             return await asyncio.wait_for(future, timeout)
         finally:
             with contextlib.suppress(ValueError):
                 self._pending_definitions.get(hash_, []).remove(future)
 
-    async def children(self, path: str, timeout: float = 3.0) -> list[
-        DefinitionRecord]:
+    async def children(self, path: str, timeout: float = 3.0) -> list[DefinitionRecord]:
         """Read the definitions of every child of a node."""
         hash_ = wing_hash(path)
         future: asyncio.Future = asyncio.get_running_loop().create_future()
         found: list[DefinitionRecord] = []
         self._child_requests[hash_] = (found, future)
-        self._send(bytes([TOKEN_HASH]) + struct.pack(">I", hash_) + bytes(
-            [TOKEN_DEFINITION_REQUEST]))
+        self._send(bytes([TOKEN_HASH]) + struct.pack(">I", hash_) + bytes([TOKEN_DEFINITION_REQUEST]))
         try:
             await asyncio.wait_for(future, timeout)
         finally:
@@ -525,8 +504,7 @@ class NativeClient:
 
     def set(self, path: str, value: Value) -> None:
         """Write a parameter. This changes the console; use with care."""
-        self._send(bytes([TOKEN_HASH]) + struct.pack(">I", wing_hash(
-            path)) + encode_value(value))
+        self._send(bytes([TOKEN_HASH]) + struct.pack(">I", wing_hash(path)) + encode_value(value))
 
     async def events(self) -> AsyncIterator[ValueRecord]:
         """Values the console sends on its own, as they arrive."""
@@ -575,5 +553,4 @@ class NativeClient:
             try:
                 await self.get(KEEPALIVE_PATH)
             except TimeoutError:
-                log.warning("Console %s did not answer the keep-alive",
-                            self.host)
+                log.warning("Console %s did not answer the keep-alive", self.host)

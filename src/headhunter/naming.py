@@ -1,9 +1,7 @@
 """Source naming: name each Dante input after the source at the other end.
 
-Usage: python -m headhunter.naming [--write]
-
-Without --write, this is a dry run: it works out every name and prints it
-beside the current one, but writes nothing to any console. With --write, it
+Without writing, this is a dry run: it works out every name and prints it
+beside the current one, but writes nothing to any console. When writing, it
 writes every name that needs changing, then reads each one back to confirm it.
 
 Only consoles marked FOH are renamed. On each one, every Dante input that is subscribed to another
@@ -16,12 +14,11 @@ source) has "link customization to source" turned on, since the channel would
 take on the new name; those inputs are reported instead.
 """
 
-import argparse
 import asyncio
 from dataclasses import dataclass
 
 from headhunter.dante import Subscription, read_subscriptions
-from headhunter.discovery import discover_consoles
+from headhunter.consoles import locate
 from headhunter.native import NativeClient
 from headhunter.store import Pairing, Store
 
@@ -68,8 +65,7 @@ def source_name(display_name: str, group: str, number: int) -> str:
         else:
             name = f"{display_name}-{abbreviation}{number:02d}-{TAG}"
     if len(name) > NAME_MAX:
-        raise ValueError(
-            f"Source name {name!r} is longer than {NAME_MAX} characters")
+        raise ValueError(f"Source name {name!r} is longer than {NAME_MAX} characters")
     return name
 
 
@@ -81,8 +77,7 @@ class PlannedName:
     dante_input: int
     current: str
     planned: str
-    linked: tuple[
-        str, ...] = ()  # Channels with customization linked to this input
+    linked: tuple[str, ...] = ()  # Channels with customization linked to this input
 
     @property
     def needs_writing(self) -> bool:
@@ -91,8 +86,7 @@ class PlannedName:
 
 async def linked_dante_inputs(client: NativeClient) -> dict[int, list[str]]:
     """Map each Dante input to the channels that use it with customization linked."""
-    strips = [(kind, n) for kind, count in STRIPS.items() for n in
-              range(1, count + 1)]
+    strips = [(kind, n) for kind, count in STRIPS.items() for n in range(1, count + 1)]
 
     async def read(kind: str, n: int) -> tuple:
         base = f"{kind}.{n}"
@@ -106,8 +100,7 @@ async def linked_dante_inputs(client: NativeClient) -> dict[int, list[str]]:
 
     results = await asyncio.gather(*(read(kind, n) for kind, n in strips))
     linked: dict[int, list[str]] = {}
-    for (kind, n), (clink, grp, number, altgrp, altnumber) in zip(strips,
-                                                                  results):
+    for (kind, n), (clink, grp, number, altgrp, altnumber) in zip(strips, results):
         if not clink:
             continue
         label = f"{kind.upper()} {n}"
@@ -119,17 +112,10 @@ async def linked_dante_inputs(client: NativeClient) -> dict[int, list[str]]:
     return linked
 
 
-async def locate(pairings: list[Pairing]) -> dict[str, str]:
-    """Find the current IP of every paired console, keyed by console MAC."""
-    found = {c.mac: c.ip for c in await discover_consoles() if c.mac}
-    return {p.console_mac: found[p.console_mac] for p in pairings if
-            p.console_mac in found}
-
-
 async def plan_names(
-        pairings: list[Pairing],
-        subscriptions: list[Subscription],
-        clients: dict[str, NativeClient],
+    pairings: list[Pairing],
+    subscriptions: list[Subscription],
+    clients: dict[str, NativeClient],
 ) -> list[PlannedName]:
     """Work out the name for every Dante input fed by another paired console.
 
@@ -170,23 +156,19 @@ async def plan_names(
     return plans
 
 
-async def apply_names(plans: list[PlannedName],
-                      clients: dict[str, NativeClient]) -> list[PlannedName]:
+async def apply_names(plans: list[PlannedName], clients: dict[str, NativeClient]) -> list[PlannedName]:
     """Write every planned name that differs from the current one.
 
     Returns the plans whose names did not read back as written.
     """
     changes = [p for p in plans if p.needs_writing]
     for plan in changes:
-        clients[plan.console.console_mac].set(
-            f"io.in.MOD.{plan.dante_input}.name", plan.planned)
+        clients[plan.console.console_mac].set(f"io.in.MOD.{plan.dante_input}.name", plan.planned)
     await asyncio.sleep(0.5)  # Give the console a moment before reading back
     readbacks = await asyncio.gather(
-        *(clients[p.console.console_mac].get(f"io.in.MOD.{p.dante_input}.name")
-          for p in changes)
+        *(clients[p.console.console_mac].get(f"io.in.MOD.{p.dante_input}.name") for p in changes)
     )
-    return [plan for plan, value in zip(changes, readbacks) if
-            value != plan.planned]
+    return [plan for plan, value in zip(changes, readbacks) if value != plan.planned]
 
 
 async def run(write: bool) -> None:
@@ -195,13 +177,12 @@ async def run(write: bool) -> None:
     if not any(p.is_foh for p in pairings):
         raise SystemExit(
             "No console is marked FOH, so there is nothing to rename. Mark one with:\n"
-            "  python -m headhunter.pairing --role <display name> FOH"
+            "  headhunter role <display name> FOH"
         )
     ips = await locate(pairings)
     for pairing in pairings:
         if pairing.console_mac not in ips:
-            print(
-                f"{pairing.display_name} did not answer discovery; skipping it.")
+            print(f"{pairing.display_name} did not answer discovery; skipping it.")
 
     subscriptions = await read_subscriptions(pairings)
     clients = {mac: NativeClient(ip) for mac, ip in ips.items()}
@@ -210,26 +191,21 @@ async def run(write: bool) -> None:
     try:
         plans = await plan_names(pairings, subscriptions, clients)
         if write:
-            for receiver in {p.console.console_mac: p.console for p in
-                             plans}.values():
+            for receiver in {p.console.console_mac: p.console for p in plans}.values():
                 if await clients[receiver.console_mac].get("$syscfg.tcplock"):
-                    raise SystemExit(
-                        f"{receiver.display_name} has TCP remote lock on; it will refuse changes.")
+                    raise SystemExit(f"{receiver.display_name} has TCP remote lock on; it will refuse changes.")
             failed = await apply_names(plans, clients)
     finally:
         await asyncio.gather(*(client.close() for client in clients.values()))
 
-    print(
-        "Names written and read back.\n" if write else "Dry run: nothing has been written.\n")
+    print("Names written and read back.\n" if write else "Dry run: nothing has been written.\n")
     for receiver in (p for p in pairings if p.is_foh):
-        rows = sorted((p for p in plans if p.console is receiver),
-                      key=lambda p: p.dante_input)
+        rows = sorted((p for p in plans if p.console is receiver), key=lambda p: p.dante_input)
         changes = sum(p.needs_writing for p in rows)
         skipped = sum(bool(p.linked) for p in rows)
         verb = "changed" if write else "would change"
-        print(
-            f"{receiver.display_name}: {len(rows)} Dante inputs from paired consoles, "
-            f"{changes} {verb}, {skipped} skipped")
+        print(f"{receiver.display_name}: {len(rows)} Dante inputs from paired consoles, "
+              f"{changes} {verb}, {skipped} skipped")
         for plan in rows:
             if plan.linked:
                 note = f"  skipped: customization linked on {', '.join(plan.linked)}"
@@ -237,24 +213,9 @@ async def run(write: bool) -> None:
             else:
                 note = "  FAILED: did not read back as written" if plan in failed else ""
                 marker = "->" if plan.current != plan.planned else "  "
-            print(
-                f"  MOD {plan.dante_input:2}  {plan.current!r:20} {marker} {plan.planned}{note}")
+            print(f"  MOD {plan.dante_input:2}  {plan.current!r:20} {marker} {plan.planned}{note}")
         print()
     if any(p.linked for p in plans):
-        print(
-            "To rename skipped inputs, turn off \"link customization to source\" on the channels listed.\n")
+        print("To rename skipped inputs, turn off \"link customization to source\" on the channels listed.\n")
     if failed:
         raise SystemExit(f"{len(failed)} names did not read back as written.")
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--write", action="store_true",
-                        help="Write the names to the FOH console(s)")
-    args = parser.parse_args()
-    asyncio.run(run(args.write))
-
-
-if __name__ == "__main__":
-    main()

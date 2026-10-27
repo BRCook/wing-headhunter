@@ -1,6 +1,6 @@
 """Read-only exploration of a paired console over the native protocol.
 
-Usage: python -m headhunter.probe <display name> [--seconds N]
+Usage: python tools/probe.py <display name> [--seconds N]
 
 Reads a handful of parameters Headhunter will depend on, then prints every
 change the console reports for N seconds (default 60). Parameters we already
@@ -13,9 +13,8 @@ import asyncio
 import contextlib
 import time
 
-from headhunter.discovery import discover_consoles
+from headhunter.consoles import find_ip
 from headhunter.native import NativeClient, Value, wing_hash
-from headhunter.store import Store
 
 STARTUP_READS = [
     "$stat.A.stat",
@@ -83,10 +82,8 @@ def known_paths() -> dict[int, str]:
     """Hashes of parameters we expect to see, so events can be shown by path."""
     paths = list(STARTUP_READS)
     for n in range(1, 41):
-        for leaf in ("in.set.trim", "in.set.altsrc", "in.conn.grp",
-                     "in.conn.in",
-                     "in.conn.altgrp", "in.conn.altin", "name", "mute", "fdr",
-                     "$fdr", "$mute",
+        for leaf in ("in.set.trim", "in.set.altsrc", "in.conn.grp", "in.conn.in",
+                     "in.conn.altgrp", "in.conn.altin", "name", "mute", "fdr", "$fdr", "$mute",
                      "clink", "col", "icon"):
             paths.append(f"ch.{n}.{leaf}")
     for group, count in (("LCL", 24), ("A", 48), ("B", 48), ("C", 48)):
@@ -94,25 +91,8 @@ def known_paths() -> dict[int, str]:
             for leaf in ("g", "vph", "name", "mute"):
                 paths.append(f"io.in.{group}.{n}.{leaf}")
     for n in range(1, 65):
-        paths += [f"io.in.MOD.{n}.name", f"io.out.MOD.{n}.grp",
-                  f"io.out.MOD.{n}.in"]
+        paths += [f"io.in.MOD.{n}.name", f"io.out.MOD.{n}.grp", f"io.out.MOD.{n}.in"]
     return {wing_hash(path): path for path in paths}
-
-
-async def find_ip(display_name: str) -> str:
-    with Store() as store:
-        pairing = next(
-            (p for p in store.pairings() if
-             p.display_name.lower() == display_name.lower()),
-            None,
-        )
-    if pairing is None:
-        raise SystemExit(f"No paired console called {display_name!r}")
-    for console in await discover_consoles():
-        if console.mac == pairing.console_mac:
-            return console.ip
-    raise SystemExit(
-        f"{display_name} ({pairing.console_name}) did not answer discovery")
 
 
 def show(value: Value) -> str:
@@ -146,15 +126,13 @@ async def run(display_name: str, seconds: float) -> None:
             print(f"\nChildren of {path}:")
             try:
                 for child in await client.children(path):
-                    print(
-                        f"  {child.name:<16} {child.long_name:<24} {child.describe()}")
+                    print(f"  {child.name:<16} {child.long_name:<24} {child.describe()}")
             except TimeoutError:
                 print("  (no reply)")
 
         if seconds <= 0:
             return
-        print(
-            f"\nListening for {seconds:.0f} seconds; make changes on the console now.\n")
+        print(f"\nListening for {seconds:.0f} seconds; make changes on the console now.\n")
         start = time.monotonic()
 
         async def listen() -> None:
@@ -168,8 +146,7 @@ async def run(display_name: str, seconds: float) -> None:
                     except TimeoutError:
                         name = f"#{event.hash:08x} (unknown)"
                     looked_up[event.hash] = name
-                print(
-                    f"  {time.monotonic() - start:6.2f}s  {name} = {show(event.value)}")
+                print(f"  {time.monotonic() - start:6.2f}s  {name} = {show(event.value)}")
 
         with contextlib.suppress(TimeoutError):
             await asyncio.wait_for(listen(), seconds)
@@ -177,12 +154,13 @@ async def run(display_name: str, seconds: float) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("display_name",
-                        help="A paired console's display name, e.g. RACK")
-    parser.add_argument("--seconds", type=float, default=60,
-                        help="How long to listen (0 to skip)")
+    parser.add_argument("display_name", help="A paired console's display name, e.g. RACK")
+    parser.add_argument("--seconds", type=float, default=60, help="How long to listen (0 to skip)")
     args = parser.parse_args()
-    asyncio.run(run(args.display_name, args.seconds))
+    try:
+        asyncio.run(run(args.display_name, args.seconds))
+    except LookupError as error:
+        raise SystemExit(str(error)) from None
 
 
 if __name__ == "__main__":

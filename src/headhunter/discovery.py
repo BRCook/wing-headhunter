@@ -20,8 +20,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 from zeroconf import IPVersion, ServiceStateChange, Zeroconf
-from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo, \
-    AsyncZeroconf
+from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo, AsyncZeroconf
 
 log = logging.getLogger(__name__)
 
@@ -85,8 +84,7 @@ def read_arp_table() -> dict[str, str]:
     try:
         lines = ARP_TABLE.read_text().splitlines()[1:]  # Skip the header
     except OSError:
-        log.warning("Could not read %s; MAC addresses will be missing",
-                    ARP_TABLE)
+        log.warning("Could not read %s; MAC addresses will be missing", ARP_TABLE)
         return table
 
     for line in lines:
@@ -111,7 +109,7 @@ class _DiscoveryProtocol(asyncio.DatagramProtocol):
 
 
 async def discover_consoles(
-        timeout: float = 2.0, attempts: int = 3
+    timeout: float = 2.0, attempts: int = 3
 ) -> list[DiscoveredConsole]:
     """Broadcast discovery and return every Wing console that answers.
 
@@ -179,11 +177,10 @@ def mac_from_dante_id(raw: bytes | None) -> str | None:
         int(digits, 16)
     except ValueError:
         return None
-    return ":".join(digits[i: i + 2] for i in range(0, 12, 2))
+    return ":".join(digits[i : i + 2] for i in range(0, 12, 2))
 
 
-async def discover_dante_devices(timeout: float = 3.0) -> list[
-    DiscoveredDanteDevice]:
+async def discover_dante_devices(timeout: float = 3.0) -> list[DiscoveredDanteDevice]:
     """Browse mDNS and return every Wing Dante card that answers.
 
     Other Dante devices are ignored.
@@ -191,25 +188,22 @@ async def discover_dante_devices(timeout: float = 3.0) -> list[
     names: set[str] = set()
 
     def on_change(
-            zeroconf: Zeroconf,
-            service_type: str,
-            name: str,
-            state_change: ServiceStateChange,
+        zeroconf: Zeroconf,
+        service_type: str,
+        name: str,
+        state_change: ServiceStateChange,
     ) -> None:
         if state_change is not ServiceStateChange.Removed:
             names.add(name)
 
     aiozc = AsyncZeroconf()
     try:
-        browser = AsyncServiceBrowser(aiozc.zeroconf, [DANTE_SERVICE],
-                                      handlers=[on_change])
+        browser = AsyncServiceBrowser(aiozc.zeroconf, [DANTE_SERVICE], handlers=[on_change])
         await asyncio.sleep(timeout)
         await browser.async_cancel()
 
-        infos = [AsyncServiceInfo(DANTE_SERVICE, name) for name in
-                 sorted(names)]
-        await asyncio.gather(
-            *(info.async_request(aiozc.zeroconf, 2000) for info in infos))
+        infos = [AsyncServiceInfo(DANTE_SERVICE, name) for name in sorted(names)]
+        await asyncio.gather(*(info.async_request(aiozc.zeroconf, 2000) for info in infos))
     finally:
         await aiozc.async_close()
 
@@ -218,8 +212,7 @@ async def discover_dante_devices(timeout: float = 3.0) -> list[
         properties = info.properties or {}
         model = decode_dante_model(properties.get(b"model"))
         if model != WING_DANTE_MODEL:
-            log.debug("Ignoring Dante device %s with model %r", info.name,
-                      model)
+            log.debug("Ignoring Dante device %s with model %r", info.name, model)
             continue
 
         addresses = info.parsed_addresses(IPVersion.V4Only)
@@ -234,39 +227,9 @@ async def discover_dante_devices(timeout: float = 3.0) -> list[
     return devices
 
 
-async def discover_all() -> tuple[
-    list[DiscoveredConsole], list[DiscoveredDanteDevice]]:
+async def discover_all() -> tuple[list[DiscoveredConsole], list[DiscoveredDanteDevice]]:
     """Discover consoles and Dante cards at the same time."""
     consoles, dante_devices = await asyncio.gather(
         discover_consoles(), discover_dante_devices()
     )
     return consoles, dante_devices
-
-
-def main() -> None:
-    logging.basicConfig(level=logging.INFO)
-    consoles, dante_devices = asyncio.run(discover_all())
-
-    print("Consoles:")
-    if not consoles:
-        print("  (none found)")
-    for console in consoles:
-        print(f"  {console.name}")
-        print(f"    ip:       {console.ip}")
-        print(f"    mac:      {console.mac or '(unknown)'}")
-        print(f"    model:    {console.model}")
-        print(f"    serial:   {console.serial}")
-        print(f"    firmware: {console.firmware}")
-
-    print("\nWing Dante cards:")
-    if not dante_devices:
-        print("  (none found)")
-    for device in dante_devices:
-        print(f"  {device.name}")
-        print(f"    ip:       {device.ip or '(unknown)'}")
-        print(f"    mac:      {device.mac or '(unknown)'}")
-        print(f"    model:    {device.model}")
-
-
-if __name__ == "__main__":
-    main()

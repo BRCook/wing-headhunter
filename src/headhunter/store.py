@@ -40,14 +40,13 @@ CREATE TABLE consoles (
 # Upgrades from each older schema version to the next
 MIGRATIONS = {
     1: f"ALTER TABLE consoles ADD COLUMN role TEXT NOT NULL DEFAULT '{STAGE}' "
-       f"CHECK (role IN ('{FOH}', '{STAGE}'))",
+    f"CHECK (role IN ('{FOH}', '{STAGE}'))",
 }
 
 
 def default_path() -> Path:
     """The database location, following the XDG base directory convention."""
-    data_home = os.environ.get(
-        "XDG_DATA_HOME") or Path.home() / ".local" / "share"
+    data_home = os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share"
     return Path(data_home) / "headhunter" / "headhunter.db"
 
 
@@ -137,11 +136,11 @@ class Store:
         return _to_pairing(row) if row else None
 
     def add(
-            self,
-            console: DiscoveredConsole,
-            dante: DiscoveredDanteDevice,
-            display_name: str,
-            role: str = STAGE,
+        self,
+        console: DiscoveredConsole,
+        dante: DiscoveredDanteDevice,
+        display_name: str,
+        role: str = STAGE,
     ) -> Pairing:
         """Pair a console with a Dante card.
 
@@ -149,8 +148,7 @@ class Store:
         paired, or the display name is already taken.
         """
         if not console.mac or not dante.mac:
-            raise ValueError(
-                "Both the console and the Dante card need a MAC address")
+            raise ValueError("Both the console and the Dante card need a MAC address")
         display_name = clean_display_name(display_name)
         if role not in ROLES:
             raise ValueError(f"Role must be one of {', '.join(ROLES)}")
@@ -180,8 +178,7 @@ class Store:
 
     def remove(self, console_mac: str) -> None:
         with self._db:
-            self._db.execute("DELETE FROM consoles WHERE console_mac = ?",
-                             (console_mac,))
+            self._db.execute("DELETE FROM consoles WHERE console_mac = ?", (console_mac,))
 
     def rename(self, console_mac: str, display_name: str) -> None:
         """Change a pairing's display name."""
@@ -194,8 +191,7 @@ class Store:
                     (display_name, _now(), console_mac),
                 )
         except sqlite3.IntegrityError as error:
-            raise ValueError(
-                f"Display name {display_name!r} is already taken") from error
+            raise ValueError(f"Display name {display_name!r} is already taken") from error
 
     def set_role(self, console_mac: str, role: str) -> None:
         """Mark a console as FOH or stage."""
@@ -210,15 +206,14 @@ class Store:
     def by_display_name(self, display_name: str) -> Pairing | None:
         """Find a pairing by display name, ignoring case."""
         return next(
-            (p for p in self.pairings() if
-             p.display_name.lower() == display_name.lower()),
+            (p for p in self.pairings() if p.display_name.lower() == display_name.lower()),
             None,
         )
 
     def refresh(
-            self,
-            consoles: list[DiscoveredConsole],
-            dante_devices: list[DiscoveredDanteDevice],
+        self,
+        consoles: list[DiscoveredConsole],
+        dante_devices: list[DiscoveredDanteDevice],
     ) -> None:
         """Update stored names from what the network currently reports.
 
