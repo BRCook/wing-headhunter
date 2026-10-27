@@ -5,15 +5,18 @@
     headhunter role <name> <FOH|STAGE>  Mark a paired console as FOH or stage
     headhunter dante                  Show what each paired console receives over Dante
     headhunter names [--write]        Name Dante sources on FOH consoles (dry run without --write)
+    headhunter run [--write-names]    Keep running, and keep names up to date as things change
 """
 
 import argparse
 import asyncio
+import contextlib
 import logging
 
 from headhunter import __version__
 from headhunter.dante import NetaudioError, read_subscriptions
 from headhunter.discovery import discover_all
+from headhunter.engine import run as run_engine
 from headhunter.naming import run as run_naming
 from headhunter.pairing import run as run_pairing
 from headhunter.pairing import set_role
@@ -76,6 +79,11 @@ def names(args: argparse.Namespace) -> None:
     asyncio.run(run_naming(args.write))
 
 
+def run(args: argparse.Namespace) -> None:
+    with contextlib.suppress(KeyboardInterrupt):
+        asyncio.run(run_engine(args.write_names))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="headhunter", description="Remote preamp control for Behringer Wing consoles connected over Dante."
@@ -98,8 +106,16 @@ def main() -> None:
     names_parser.add_argument("--write", action="store_true", help="Write the names (without this, it is a dry run)")
     names_parser.set_defaults(func=names)
 
+    run_parser = commands.add_parser("run", help="Keep running, and keep names up to date as things change")
+    run_parser.add_argument("--write-names", action="store_true", help="Write names (without this, only report them)")
+    run_parser.set_defaults(func=run)
+
     args = parser.parse_args()
-    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.WARNING)
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.INFO if args.command == "run" else logging.WARNING,
+        format="%(asctime)s %(levelname)-7s %(message)s" if args.command == "run" else "%(message)s",
+        datefmt="%H:%M:%S",
+    )
     try:
         args.func(args)
     except (LookupError, NetaudioError) as error:

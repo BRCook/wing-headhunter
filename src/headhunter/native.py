@@ -419,15 +419,20 @@ class NativeClient:
     The console never reports a connection's own changes back to it, but does
     report them to every other connection. Headhunter should therefore use a
     single connection per console, and keep track of what it has written itself.
+
+    If the connection drops, `closed` is set, events() stops, and any request
+    still waiting fails with ConnectionError.
     """
 
-    def __init__(self, host: str, port: int = NATIVE_PORT) -> None:
+    def __init__(self, host: str, port: int = NATIVE_PORT, label: str | None = None) -> None:
         self.host = host
         self.port = port
+        self.label = label or host  # How the console is named in log messages
         self._reader: asyncio.StreamReader | None = None
         self._writer: asyncio.StreamWriter | None = None
         self._tasks: list[asyncio.Task] = []
-        self._events: asyncio.Queue[ValueRecord] = asyncio.Queue()
+        self._events: asyncio.Queue[ValueRecord | None] = asyncio.Queue()
+        self.closed = asyncio.Event()
         self._pending_values: dict[int, list[asyncio.Future[Value]]] = {}
         self._pending_definitions: dict[int, list[asyncio.Future[DefinitionRecord]]] = {}
         self._child_requests: dict[int, tuple[list[DefinitionRecord], asyncio.Future]] = {}
@@ -445,6 +450,7 @@ class NativeClient:
         await self.get(KEEPALIVE_PATH, timeout)
 
     async def close(self) -> None:
+        self._connection_lost()
         for task in self._tasks:
             task.cancel()
         for task in self._tasks:
@@ -463,7 +469,8 @@ class NativeClient:
         await self.close()
 
     def _send(self, payload: bytes) -> None:
-        assert self._writer is not None, "Not connected"
+        if self._writer is None or self.closed.is_set():
+            raise ConnectionError(f"Not connected to {self.label}")
         self._writer.write(encode_frame(AUDIO_ENGINE_CHANNEL, payload))
 
     async def get(self, path: str, timeout: float = 2.0) -> Value:
@@ -507,24 +514,47 @@ class NativeClient:
         self._send(bytes([TOKEN_HASH]) + struct.pack(">I", wing_hash(path)) + encode_value(value))
 
     async def events(self) -> AsyncIterator[ValueRecord]:
-        """Values the console sends on its own, as they arrive."""
+        """Values the console sends on its own, as they arrive; ends if the connection drops."""
         while True:
-            yield await self._events.get()
+            event = await self._events.get()
+            if event is None:
+                return
+            yield event
 
     async def _read_loop(self) -> None:
         assert self._reader is not None
         frames = FrameDecoder()
         records = RecordDecoder()
-        while True:
-            chunk = await self._reader.read(65536)
-            if not chunk:
-                log.warning("Console %s closed the connection", self.host)
-                return
-            for channel, payload in frames.feed(chunk):
-                if channel != AUDIO_ENGINE_CHANNEL:
-                    continue
-                for record in records.feed(payload):
-                    self._dispatch(record)
+        try:
+            while True:
+                chunk = await self._reader.read(65536)
+                if not chunk:
+                    log.warning("%s closed the connection", self.label)
+                    return
+                for channel, payload in frames.feed(chunk):
+                    if channel != AUDIO_ENGINE_CHANNEL:
+                        continue
+                    for record in records.feed(payload):
+                        self._dispatch(record)
+        except OSError as error:
+            log.warning("Lost connection to %s: %s", self.label, error)
+        finally:
+            self._connection_lost()
+
+    def _connection_lost(self) -> None:
+        """Mark the connection closed, end events(), and fail anything still waiting."""
+        if self.closed.is_set():
+            return
+        self.closed.set()
+        self._events.put_nowait(None)
+        error = ConnectionError(f"Lost connection to {self.label}")
+        for futures in [*self._pending_values.values(), *self._pending_definitions.values()]:
+            for future in futures:
+                if not future.done():
+                    future.set_exception(error)
+        for _, future in self._child_requests.values():
+            if not future.done():
+                future.set_exception(error)
 
     def _dispatch(self, record: Record) -> None:
         if isinstance(record, ValueRecord):
@@ -548,9 +578,16 @@ class NativeClient:
                     future.set_result(None)
 
     async def _keepalive_loop(self) -> None:
-        while True:
+        while not self.closed.is_set():
             await asyncio.sleep(KEEPALIVE_SECONDS)
             try:
                 await self.get(KEEPALIVE_PATH)
             except TimeoutError:
-                log.warning("Console %s did not answer the keep-alive", self.host)
+                # A console that stops answering is treated as gone
+                log.warning("%s did not answer the keep-alive; disconnecting", self.label)
+                if self._writer:
+                    self._writer.close()
+                self._connection_lost()
+                return
+            except ConnectionError:
+                return

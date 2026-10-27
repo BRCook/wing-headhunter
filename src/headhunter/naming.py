@@ -15,11 +15,12 @@ take on the new name; those inputs are reported instead.
 """
 
 import asyncio
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from headhunter.dante import Subscription, read_subscriptions
 from headhunter.consoles import locate
-from headhunter.native import NativeClient
+from headhunter.native import NativeClient, Value
 from headhunter.store import Pairing, Store
 
 # Wing source group -> abbreviation, as documented in the README
@@ -84,71 +85,82 @@ class PlannedName:
         return not self.linked and self.current != self.planned
 
 
-async def linked_dante_inputs(client: NativeClient) -> dict[int, list[str]]:
+DANTE_INPUTS = 64
+State = Mapping[str, Value]
+
+
+def foh_paths() -> list[str]:
+    """Every parameter naming needs from a FOH console."""
+    paths = []
+    for kind, count in STRIPS.items():
+        for n in range(1, count + 1):
+            paths += [f"{kind}.{n}.clink"] + [f"{kind}.{n}.in.conn.{leaf}" for leaf in ("grp", "in", "altgrp", "altin")]
+    paths += [f"io.in.MOD.{n}.name" for n in range(1, DANTE_INPUTS + 1)]
+    return paths
+
+
+def stage_paths() -> list[str]:
+    """Every parameter naming needs from a stage console."""
+    return [f"io.out.MOD.{n}.{leaf}" for n in range(1, DANTE_INPUTS + 1) for leaf in ("grp", "in")]
+
+
+def paths_for(pairing: Pairing) -> list[str]:
+    """Every parameter naming needs from a console. Any console can send Dante,
+    so every console's output routing is needed; FOH consoles need more."""
+    return (foh_paths() if pairing.is_foh else []) + stage_paths()
+
+
+def linked_from_state(state: State) -> dict[int, list[str]]:
     """Map each Dante input to the channels that use it with customization linked."""
-    strips = [(kind, n) for kind, count in STRIPS.items() for n in range(1, count + 1)]
-
-    async def read(kind: str, n: int) -> tuple:
-        base = f"{kind}.{n}"
-        return await asyncio.gather(
-            client.get(f"{base}.clink"),
-            client.get(f"{base}.in.conn.grp"),
-            client.get(f"{base}.in.conn.in"),
-            client.get(f"{base}.in.conn.altgrp"),
-            client.get(f"{base}.in.conn.altin"),
-        )
-
-    results = await asyncio.gather(*(read(kind, n) for kind, n in strips))
     linked: dict[int, list[str]] = {}
-    for (kind, n), (clink, grp, number, altgrp, altnumber) in zip(strips, results):
-        if not clink:
-            continue
-        label = f"{kind.upper()} {n}"
-        for group, source in ((grp, number), (altgrp, altnumber)):
-            if group == "MOD":
-                linked.setdefault(int(source), [])
-                if label not in linked[int(source)]:
-                    linked[int(source)].append(label)
+    for kind, count in STRIPS.items():
+        for n in range(1, count + 1):
+            base = f"{kind}.{n}"
+            if not state.get(f"{base}.clink"):
+                continue
+            label = f"{kind.upper()} {n}"
+            for group_leaf, number_leaf in (("grp", "in"), ("altgrp", "altin")):
+                if state.get(f"{base}.in.conn.{group_leaf}") == "MOD":
+                    source = int(state.get(f"{base}.in.conn.{number_leaf}") or 0)
+                    if label not in linked.setdefault(source, []):
+                        linked[source].append(label)
     return linked
 
 
-async def plan_names(
+def plan_from_state(
     pairings: list[Pairing],
     subscriptions: list[Subscription],
-    clients: dict[str, NativeClient],
+    states: Mapping[str, State],
 ) -> list[PlannedName]:
-    """Work out the name for every Dante input fed by another paired console.
+    """Work out the name for every Dante input on FOH consoles fed by another paired console.
 
-    clients maps console MAC to a connected client for every reachable console.
+    states maps console MAC to that console's current parameter values, for
+    the parameters listed by paths_for().
+    Consoles missing from states are treated as unreachable and skipped.
     """
     by_dante_name = {p.dante_name: p for p in pairings}
     plans = []
     for receiver in pairings:
-        if not receiver.is_foh:
+        if not receiver.is_foh or receiver.console_mac not in states:
             continue
-        rx_client = clients.get(receiver.console_mac)
-        if rx_client is None:
-            continue
-        linked = await linked_dante_inputs(rx_client)
+        rx_state = states[receiver.console_mac]
+        linked = linked_from_state(rx_state)
         for sub in subscriptions:
             if sub.rx_device != receiver.dante_name or not sub.connected:
                 continue
             sender = by_dante_name.get(sub.tx_device)
-            if sender is None or sender is receiver:
-                continue  # Not from a paired console; leave its name alone
-            tx_client = clients.get(sender.console_mac)
-            if tx_client is None:
+            if sender is None or sender is receiver or sender.console_mac not in states:
+                continue  # Not from a reachable paired console; leave its name alone
+            tx_state = states[sender.console_mac]
+            group = tx_state.get(f"io.out.MOD.{sub.tx_channel}.grp")
+            number = tx_state.get(f"io.out.MOD.{sub.tx_channel}.in")
+            if group is None or number is None:
                 continue
-            group, number, current = await asyncio.gather(
-                tx_client.get(f"io.out.MOD.{sub.tx_channel}.grp"),
-                tx_client.get(f"io.out.MOD.{sub.tx_channel}.in"),
-                rx_client.get(f"io.in.MOD.{sub.rx_channel}.name"),
-            )
             plans.append(
                 PlannedName(
                     receiver,
                     sub.rx_channel,
-                    str(current),
+                    str(rx_state.get(f"io.in.MOD.{sub.rx_channel}.name", "")),
                     source_name(sender.display_name, str(group), int(number)),
                     tuple(linked.get(sub.rx_channel, ())),
                 )
@@ -156,7 +168,30 @@ async def plan_names(
     return plans
 
 
-async def apply_names(plans: list[PlannedName], clients: dict[str, NativeClient]) -> list[PlannedName]:
+async def read_state(client: NativeClient, paths: list[str]) -> dict[str, Value]:
+    """Read many parameters at once."""
+    values = await asyncio.gather(*(client.get(path) for path in paths))
+    return dict(zip(paths, values))
+
+
+async def plan_names(
+    pairings: list[Pairing],
+    subscriptions: list[Subscription],
+    clients: Mapping[str, NativeClient],
+) -> list[PlannedName]:
+    """Read every console's current state and work out the names, in one go.
+
+    clients maps console MAC to a connected client for every reachable console.
+    """
+    states = {}
+    for pairing in pairings:
+        client = clients.get(pairing.console_mac)
+        if client is not None:
+            states[pairing.console_mac] = await read_state(client, paths_for(pairing))
+    return plan_from_state(pairings, subscriptions, states)
+
+
+async def apply_names(plans: list[PlannedName], clients: Mapping[str, NativeClient]) -> list[PlannedName]:
     """Write every planned name that differs from the current one.
 
     Returns the plans whose names did not read back as written.
