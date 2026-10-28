@@ -1253,10 +1253,21 @@ async def run(
             f"Could not start the web page on port {web.port}: {error.strerror or error}. "
             "Choose another with --port, or: headhunter settings web_port <port>"
         ) from None
-    log.info("Status page on port %d", web.port)
+    from headhunter.mdns import Advertiser
+
+    advertiser = Advertiser(settings.web_name, web.port)
+    try:
+        await advertiser.start()
+    except OSError as error:
+        log.warning("Could not advertise the status page on the network: %s", error)
+    if advertiser.host:
+        log.info("Status page at http://%s:%d", advertiser.host, web.port)
+    else:
+        log.info("Status page on port %d", web.port)
     try:
         await _run(engine, stats_minutes)
     finally:
+        await advertiser.stop()
         await web.stop()
         logging.getLogger("headhunter").removeHandler(logs)
 

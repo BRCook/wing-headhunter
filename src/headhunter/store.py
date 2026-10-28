@@ -7,6 +7,7 @@ stored. Session state (trim snapshots, gain mode, and so on) never goes here.
 """
 
 import os
+import re
 import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -67,6 +68,7 @@ class Settings:
     restore_after: float = 2.0  # Seconds the trim knob must be still before trim is restored
     stats_minutes: float = 0.0  # 0 means off
     web_port: int = 8048
+    web_name: str = "headhunter"  # The page is advertised as <web_name>.local
 
 
 def _parse_bool(text: str) -> bool:
@@ -99,6 +101,13 @@ def _parse_port(text: str) -> int:
     return value
 
 
+def _parse_host_name(text: str) -> str:
+    name = text.strip().lower()
+    if not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", name):
+        raise ValueError("must be letters, digits and hyphens, not starting or ending with a hyphen")
+    return name
+
+
 # Setting name -> how its stored text is checked and turned into a value
 SETTING_PARSERS = {
     "write_names": _parse_bool,
@@ -106,6 +115,7 @@ SETTING_PARSERS = {
     "restore_after": _parse_seconds,
     "stats_minutes": _parse_minutes,
     "web_port": _parse_port,
+    "web_name": _parse_host_name,
 }
 
 

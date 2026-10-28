@@ -174,3 +174,15 @@ def test_changes_from_elsewhere_are_noticed(tmp_path):
         other.set_setting("write_names", "on")
         assert watcher.data_version() != before
         assert watcher.settings().write_names
+
+
+@pytest.mark.parametrize("text, expected", [("headhunter", "headhunter"), ("FOH-Box", "foh-box")])
+def test_web_names(store, text, expected):
+    store.set_setting("web_name", text)
+    assert store.settings().web_name == expected
+
+
+@pytest.mark.parametrize("text", ["-bad", "bad-", "has space", "dot.ted", ""])
+def test_bad_web_names(store, text):
+    with pytest.raises(ValueError):
+        store.set_setting("web_name", text)
