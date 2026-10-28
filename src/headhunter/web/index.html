@@ -109,6 +109,35 @@
   .log .warning span, .log .error span { color: var(--away); }
   .empty { color: var(--muted); }
 
+  nav { display: flex; gap: .25rem; }
+  nav button { font: inherit; background: none; border: 1px solid transparent; border-radius: 6px; padding: .2rem .7rem; color: var(--muted); cursor: pointer; }
+  nav button[aria-current="page"] { color: var(--text); border-color: var(--line); background: var(--panel); font-weight: 600; }
+  [hidden] { display: none !important; }
+
+  /* Setup: custom control buttons */
+  .roles { display: grid; grid-template-columns: max-content 1fr; gap: .4rem 1rem; margin: .75rem 0 1rem; align-items: baseline; }
+  .roles dt { font-weight: 600; }
+  .roles dd { margin: 0; }
+  .roles .on-gpio { display: inline-flex; gap: .4rem; align-items: baseline; margin-right: .8rem; }
+  .chooser { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; align-items: center; margin-bottom: .9rem; }
+  .chooser label { display: inline-flex; gap: .35rem; align-items: center; cursor: pointer; }
+  select, .link { font: inherit; }
+  .link { background: none; border: none; color: var(--amber); cursor: pointer; padding: 0; text-decoration: underline; }
+  .pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: .75rem; }
+  .page h4 { margin: 0 0 .3rem; font-size: .9rem; color: var(--muted); font-weight: 600; }
+  .page .cells { display: grid; grid-template-columns: repeat(2, 1fr); gap: .3rem; }
+  .cell {
+    font: inherit; font-size: .8rem; text-align: left; min-height: 2.6rem; padding: .3rem .45rem; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); overflow-wrap: anywhere;
+  }
+  .cell.blank { color: var(--muted); }
+  .cell.gain { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
+  .cell.phantom { border-color: var(--red); box-shadow: inset 0 0 0 1px var(--red); }
+  .cell:hover, .cell:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+  .cell small { display: block; color: var(--muted); }
+  .message { margin: .5rem 0 0; font-size: .92rem; }
+  .message.error { color: var(--away); font-weight: 600; }
+
   @media (max-width: 40rem) {
     .foh-body { grid-template-columns: 1fr; }
     .link-state { margin-left: 0; width: 100%; }
@@ -120,12 +149,22 @@
 <main>
   <header>
     <h1>Headhunter</h1>
+    <nav>
+      <button type="button" data-view="status" aria-current="page">Status</button>
+      <button type="button" data-view="setup">Setup</button>
+    </nav>
     <div class="writing" id="writing"></div>
     <div class="link-state" id="link-state">Connecting…</div>
   </header>
 
-  <section id="foh"></section>
-  <section class="stages" id="stages"></section>
+  <div id="view-status">
+    <section id="foh"></section>
+    <section class="stages" id="stages"></section>
+  </div>
+
+  <div id="view-setup" hidden>
+    <section id="setup"></section>
+  </div>
 
   <h3>Log</h3>
   <div class="log" id="log" role="log" aria-live="polite"></div>
@@ -133,7 +172,7 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
-const esc = (text) => String(text ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const esc = (text) => String(text ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const dB = (value) => (value > 0 ? "+" : "") + value.toFixed(1) + " dB";
 
 function connection(console) {
@@ -230,6 +269,135 @@ function addLog(lines) {
   if (atBottom) box.scrollTop = box.scrollHeight;
 }
 
+// --- Setup: custom control buttons ---------------------------------------------------------
+
+let latestStatus = null;
+const setupState = {};  // Per console: the chosen role and GPIO, and the last message
+
+async function api(path, body) {
+  const response = await fetch(path, body ? {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  } : undefined);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || response.statusText);
+  return data;
+}
+
+function roleOf(button, setup) {
+  if (button.mode !== "GPIO" || !button.flag) return null;
+  const letter = button.flag[0];
+  if (letter === setup.gain_gpio) return "gain";
+  if (letter === setup.phantom_gpio) return "phantom";
+  return null;
+}
+
+function renderButtons(console, setup) {
+  const state = setupState[console] ??= { role: "gain", gpio: setup.gain_gpio || "C", message: "", error: false };
+  const onRole = (role) => setup.buttons.filter((b) => roleOf(b, setup) === role);
+  const describe = (role) => {
+    const gpio = role === "gain" ? setup.gain_gpio : setup.phantom_gpio;
+    if (!gpio) return "Not chosen";
+    const found = onRole(role);
+    const buttons = found.length ? found.map((b) => `<span class="on-gpio">${esc(b.label)}
+      <button class="link" type="button" data-clear='${esc(JSON.stringify(b))}'>Clear</button></span>`).join("")
+      : "no button is set up on it yet";
+    return `GPIO ${esc(gpio)}: ${buttons}`;
+  };
+  const gpioOptions = ["A", "B", "C", "D"].map((g) => `<option ${g === state.gpio ? "selected" : ""}>${g}</option>`).join("");
+  const pages = setup.pages.map((page) => {
+    const cells = setup.buttons.filter((b) => b.page === page).map((b) => {
+      const role = roleOf(b, setup);
+      const text = b.mode === "OFF" ? "Blank" : (b.function || b.mode);
+      const which = setup.rows.length > 1 ? ` ${b.row === "bu" ? "upper" : "lower"}` : "";
+      return `<button type="button" class="cell ${b.mode === "OFF" ? "blank" : ""} ${role || ""}" data-button='${esc(JSON.stringify(b))}'>
+        <small>Button ${b.number}${which}</small>${esc(text)}</button>`;
+    }).join("");
+    return `<div class="page"><h4>Page ${esc(page)}</h4><div class="cells">${cells}</div></div>`;
+  }).join("");
+  return `<div class="panel" data-console="${esc(console)}">
+    <div class="name-row"><h2>${esc(console)}</h2><span class="role">Custom control buttons</span></div>
+    <dl class="roles"><dt>Gain mode</dt><dd>${describe("gain")}</dd><dt>Phantom power</dt><dd>${describe("phantom")}</dd></dl>
+    <div class="chooser">
+      <label><input type="radio" name="role-${esc(console)}" value="gain" ${state.role === "gain" ? "checked" : ""}> Gain mode (toggle)</label>
+      <label><input type="radio" name="role-${esc(console)}" value="phantom" ${state.role === "phantom" ? "checked" : ""}> Phantom power (push)</label>
+      <label>on GPIO <select data-gpio>${gpioOptions}</select></label>
+      <span class="role">then choose a button</span>
+    </div>
+    <div class="pages">${pages}</div>
+    ${state.message ? `<p class="message ${state.error ? "error" : ""}">${esc(state.message)}</p>` : ""}
+  </div>`;
+}
+
+async function loadSetup() {
+  const box = $("setup");
+  const fohs = (latestStatus?.consoles || []).filter((c) => c.role === "FOH");
+  if (!fohs.length) { box.innerHTML = `<div class="panel"><p class="empty">No console is marked FOH.</p></div>`; return; }
+  box.innerHTML = `<div class="panel"><p class="empty">Reading the custom control buttons…</p></div>`;
+  const parts = [];
+  for (const console of fohs) {
+    try {
+      parts.push(renderButtons(console.name, await api(`/api/buttons/${encodeURIComponent(console.name)}`)));
+    } catch (error) {
+      parts.push(`<div class="panel"><h2>${esc(console.name)}</h2><p class="message error">${esc(error.message)}</p></div>`);
+    }
+  }
+  box.innerHTML = parts.join("");
+}
+
+$("setup").addEventListener("change", (event) => {
+  const panel = event.target.closest("[data-console]");
+  if (!panel) return;
+  const state = setupState[panel.dataset.console];
+  if (event.target.type === "radio") {
+    state.role = event.target.value;
+    state.gpio = event.target.value === "gain" ? "C" : "D";
+    panel.querySelector("[data-gpio]").value = state.gpio;
+  }
+  if (event.target.matches("[data-gpio]")) state.gpio = event.target.value;
+});
+
+$("setup").addEventListener("click", async (event) => {
+  const panel = event.target.closest("[data-console]");
+  if (!panel) return;
+  const console = panel.dataset.console;
+  const state = setupState[console];
+  const cell = event.target.closest("[data-button]");
+  const clear = event.target.closest("[data-clear]");
+  try {
+    if (cell) {
+      const button = JSON.parse(cell.dataset.button);
+      const role = state.role === "gain" ? "gain mode" : "phantom power";
+      const current = button.mode === "OFF" ? "" : `It currently does: ${button.function || button.mode}.\n\n`;
+      if (!confirm(`${current}Make ${button.label} the ${role} button, on GPIO ${state.gpio}?`)) return;
+      await api(`/api/buttons/${encodeURIComponent(console)}/assign`, { ...button, role: state.role, gpio: state.gpio });
+      state.message = `${button.label} is now the ${role} button.`;
+      state.error = false;
+    } else if (clear) {
+      const button = JSON.parse(clear.dataset.clear);
+      if (!confirm(`Clear ${button.label}? Its function and name will be removed.`)) return;
+      await api(`/api/buttons/${encodeURIComponent(console)}/clear`, button);
+      state.message = `${button.label} cleared.`;
+      state.error = false;
+    } else {
+      return;
+    }
+  } catch (error) {
+    state.message = error.message;
+    state.error = true;
+  }
+  await loadSetup();
+});
+
+for (const tab of document.querySelectorAll("nav [data-view]")) {
+  tab.addEventListener("click", () => {
+    for (const other of document.querySelectorAll("nav [data-view]")) other.removeAttribute("aria-current");
+    tab.setAttribute("aria-current", "page");
+    $("view-status").hidden = tab.dataset.view !== "status";
+    $("view-setup").hidden = tab.dataset.view !== "setup";
+    if (tab.dataset.view === "setup") loadSetup();
+  });
+}
+
 function connect() {
   const socket = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
   socket.onopen = () => {
@@ -239,7 +407,7 @@ function connect() {
   };
   socket.onmessage = (event) => {
     const message = JSON.parse(event.data);
-    if (message.type === "status") renderStatus(message.status);
+    if (message.type === "status") { latestStatus = message.status; renderStatus(message.status); }
     if (message.type === "log") addLog(message.lines);
   };
   socket.onclose = () => {

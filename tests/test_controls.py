@@ -109,3 +109,33 @@ def test_phantom_labels(gain_mode, phantoms, label):
 
 def test_gain_labels():
     assert (controls.gain_label(True), controls.gain_label(False)) == ("|HH GAIN ON", "|HH GAIN OFF")
+
+
+def test_surveying_every_button():
+    async def scenario():
+        wing = console()
+        client = await connected(wing)
+        try:
+            found = {s.button: s for s in await controls.survey(client, COMPACT)}
+            assert len(found) == 36
+            assert found[PHANTOM].setup.gpio == (4, True)
+            assert found[SPARE].setup.mode == "OFF"
+        finally:
+            await client.close()
+            await wing.stop()
+
+    asyncio.run(scenario())
+
+
+def test_clearing_a_button():
+    async def scenario():
+        wing = console()
+        client = await connected(wing)
+        try:
+            await controls.clear(client, PHANTOM)
+            assert (await controls.read(client, PHANTOM)) == controls.Setup("OFF", "", None)
+        finally:
+            await client.close()
+            await wing.stop()
+
+    asyncio.run(scenario())

@@ -52,6 +52,9 @@ class WebServer:
         app.router.add_get("/", self._page)
         app.router.add_get("/api/status", self._status)
         app.router.add_get("/ws", self._websocket)
+        app.router.add_get("/api/buttons/{console}", self._buttons)
+        app.router.add_post("/api/buttons/{console}/assign", self._assign)
+        app.router.add_post("/api/buttons/{console}/clear", self._clear)
         self._runner = web.AppRunner(app, access_log=None)
         await self._runner.setup()
         site = web.TCPSite(self._runner, self.host, self.port)
@@ -72,6 +75,37 @@ class WebServer:
 
     async def _status(self, request: web.Request) -> web.Response:
         return web.json_response(self.engine.status())
+
+    async def _buttons(self, request: web.Request) -> web.Response:
+        try:
+            return web.json_response(await self.engine.button_setup(request.match_info["console"]))
+        except ValueError as error:
+            return web.json_response({"error": str(error)}, status=400)
+
+    @staticmethod
+    async def _button_from(request: web.Request) -> tuple[dict, "controls.Button"]:
+        from headhunter import controls
+
+        body = await request.json()
+        return body, controls.Button(str(body["page"]), int(body["number"]), str(body["row"]))
+
+    async def _assign(self, request: web.Request) -> web.Response:
+        from headhunter.buttons import gpio_number
+
+        try:
+            body, button = await self._button_from(request)
+            await self.engine.assign_button(request.match_info["console"], body["role"], button, gpio_number(body["gpio"]))
+        except (ValueError, KeyError, TypeError, RuntimeError) as error:
+            return web.json_response({"error": str(error)}, status=400)
+        return web.json_response({"ok": True})
+
+    async def _clear(self, request: web.Request) -> web.Response:
+        try:
+            _, button = await self._button_from(request)
+            await self.engine.clear_button(request.match_info["console"], button)
+        except (ValueError, KeyError, TypeError, RuntimeError) as error:
+            return web.json_response({"error": str(error)}, status=400)
+        return web.json_response({"ok": True})
 
     async def _websocket(self, request: web.Request) -> web.WebSocketResponse:
         socket = web.WebSocketResponse(heartbeat=20)

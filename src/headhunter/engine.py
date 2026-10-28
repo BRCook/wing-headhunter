@@ -281,6 +281,71 @@ class Engine:
             status["sides"].append(entry)
         return status
 
+    # --- Setup, for the web page ---------------------------------------------------------------
+
+    def _foh_by_name(self, name: str) -> tuple[Pairing, NativeClient]:
+        """A FOH console by display name, and its connection. Raises ValueError if there is none."""
+        pairing = next((p for p in self.pairings if p.display_name.lower() == name.lower()), None)
+        if pairing is None or not pairing.is_foh:
+            raise ValueError(f"No FOH console called {name!r}")
+        client = self.links[pairing.console_mac].client
+        if client is None:
+            raise ValueError(f"{pairing.display_name} is not connected")
+        return pairing, client
+
+    async def button_setup(self, name: str) -> dict:
+        """A FOH console's custom control buttons, and which are Headhunter's."""
+        pairing, client = self._foh_by_name(name)
+        buttons = await controls.survey(client, pairing)
+        return {
+            "console": pairing.display_name,
+            "pages": controls.pages(pairing),
+            "rows": list(controls.rows(pairing)),
+            "gain_gpio": gpio_name(pairing.gain_gpio) if pairing.gain_gpio else None,
+            "phantom_gpio": gpio_name(pairing.phantom_gpio) if pairing.phantom_gpio else None,
+            "buttons": [
+                {
+                    "page": s.button.page, "number": s.button.number, "row": s.button.row,
+                    "label": s.button.label, "mode": s.setup.mode, "name": s.setup.name,
+                    "flag": s.setup.flag, "function": s.function,
+                }
+                for s in buttons
+            ],
+        }
+
+    async def assign_button(self, name: str, role: str, button: controls.Button, gpio: int) -> None:
+        """Make a custom control button Headhunter's gain mode or phantom power button, and save it.
+
+        Gain mode is always a toggle and phantom power always a push button, since nothing else works.
+        """
+        if role not in ("gain", "phantom"):
+            raise ValueError("The role must be gain or phantom")
+        pairing, client = self._foh_by_name(name)
+        if button not in controls.all_buttons(pairing):
+            raise ValueError(f"{pairing.display_name} has no {button.label}")
+        gain_gpio = gpio if role == "gain" else pairing.gain_gpio
+        phantom_gpio = gpio if role == "phantom" else pairing.phantom_gpio
+        if gain_gpio is not None and gain_gpio == phantom_gpio:
+            raise ValueError("Gain mode and phantom power need different GPIOs")
+        label = controls.gain_label(False) if role == "gain" else controls.LABEL_DISABLED
+        await controls.assign(client, button, gpio, push=role == "phantom", name=label)
+        updated = Pairing(**{**pairing.__dict__, "gain_gpio": gain_gpio, "phantom_gpio": phantom_gpio})
+        if self._store_path is not None:
+            with Store(self._store_path) as store:
+                store.set_buttons(pairing.console_mac, gain_gpio, phantom_gpio)
+        await self.reconfigure([updated if p.console_mac == pairing.console_mac else p for p in self.pairings])
+        self._scan_buttons(updated)
+        log.info("%s: %s is now the %s button, on GPIO %s", pairing.display_name, button.label,
+                 "gain mode" if role == "gain" else "phantom power", gpio_name(gpio))
+
+    async def clear_button(self, name: str, button: controls.Button) -> None:
+        pairing, client = self._foh_by_name(name)
+        if button not in controls.all_buttons(pairing):
+            raise ValueError(f"{pairing.display_name} has no {button.label}")
+        await controls.clear(client, button)
+        self._scan_buttons(pairing)
+        log.info("%s: %s cleared", pairing.display_name, button.label)
+
     # --- Configuration --------------------------------------------------------------------------
 
     def _add(self, pairing: Pairing) -> None:

@@ -80,7 +80,8 @@ class FakeWing:
 
     def add_button(self, base: str, mode: str = "OFF", name: str = "", flag: str | None = None) -> None:
         self.buttons.add(base)
-        for leaf, value in (("mode", mode), ("name", name)):
+        description = "" if mode == "OFF" else f"GPIO {'*' if (flag or '').endswith('-P') else ''}{(flag or 'A')[0]}" if mode == "GPIO" else mode
+        for leaf, value in (("mode", mode), ("name", name), ("$fname", description)):
             self.values[f"{base}.{leaf}"] = value
             self._paths[wing_hash(f"{base}.{leaf}")] = f"{base}.{leaf}"
         if flag is not None:

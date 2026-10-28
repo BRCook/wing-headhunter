@@ -193,3 +193,31 @@ def phantom_label(gain_mode: bool, phantoms: list[bool] | None) -> str:
     if not phantoms:
         return LABEL_NO_48V
     return LABEL_48V_OFF if all(phantoms) else LABEL_48V_ON
+
+
+@dataclass(frozen=True)
+class Surveyed:
+    """A button, how it is set up, and what the console calls its function."""
+
+    button: Button
+    setup: Setup
+    function: Value  # The console's description, e.g. "GPIO *D" or "MUTE CH1"
+
+
+async def survey(client: NativeClient, pairing: Pairing) -> list[Surveyed]:
+    """Every custom control button on a console, and how each is set up."""
+    found = []
+    for button in all_buttons(pairing):
+        setup = await read(client, button)
+        function = await _maybe(client, f"{button.path}.$fname")
+        found.append(Surveyed(button, setup, function))
+    return found
+
+
+async def clear(client: NativeClient, button: Button) -> None:
+    """Take a button's function and name away."""
+    client.set(f"{button.path}.mode", "OFF")
+    client.set(f"{button.path}.name", "")
+    result = await read(client, button)
+    if result.mode != "OFF":
+        raise RuntimeError(f"{button.label} did not clear; it reads {result}")

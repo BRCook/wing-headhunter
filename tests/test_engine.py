@@ -1383,3 +1383,55 @@ def test_changing_the_phantom_button_to_a_toggle_while_running_is_noticed(networ
             await compact.stop()
 
     asyncio.run(scenario())
+
+
+def test_assigning_buttons_from_setup(network, quick_flashes, tmp_path):
+    from headhunter import controls
+    from headhunter.store import Store
+
+    foh = Pairing(**{**COMPACT.__dict__, "gain_gpio": 3, "phantom_gpio": 4})
+    path = tmp_path / "headhunter.db"
+    with Store(path) as store:
+        store._db.execute(
+            "INSERT INTO consoles VALUES (?, ?, ?, ?, ?, ?, ?, 't', 't', ?, 3, 4)",
+            (foh.console_mac, foh.console_name, foh.console_model, foh.console_serial,
+             foh.dante_mac, foh.dante_name, foh.display_name, FOH),
+        )
+        store._db.commit()
+
+    async def scenario():
+        rack, compact = stage_box_setup(foh)
+        with_buttons(compact)
+        await rack.start()
+        await compact.start()
+        running = engine.Engine([RACK, foh], ports={"rack-mac": rack.port, "compact-mac": compact.port},
+                                write_gain=True, store_path=path)
+        task = asyncio.create_task(running.run())
+        try:
+            await wait_for(lambda: running._phantom_usable.get("compact-mac") is True)
+            setup = await running.button_setup("compact")
+            assert (setup["gain_gpio"], setup["phantom_gpio"]) == ("C", "D")
+            assert len(setup["buttons"]) == 36
+
+            # Move phantom power to page U3, button 4, on GPIO B
+            await running.assign_button("COMPACT", "phantom", controls.Button("U3", 4, "bu"), 2)
+            assert compact.flags["$ctl.user.U3.4.bu"] == "B-P"
+            assert running.pairings[1].phantom_gpio == 2
+            with Store(path) as store:
+                assert store.by_display_name("COMPACT").phantom_gpio == 2
+            await wait_for(lambda: compact.values["$ctl.user.U3.4.bu.name"] == "|HH DISABLED")
+
+            # The old button can be cleared
+            await running.clear_button("COMPACT", controls.Button("U2", 2, "bu"))
+            assert compact.values["$ctl.user.U2.2.bu.mode"] == "OFF"
+
+            # Gain mode and phantom power cannot share a GPIO
+            with pytest.raises(ValueError):
+                await running.assign_button("COMPACT", "gain", controls.Button("U1", 1, "bu"), 2)
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await rack.stop()
+            await compact.stop()
+
+    asyncio.run(scenario())

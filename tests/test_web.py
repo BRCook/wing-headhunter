@@ -90,3 +90,48 @@ def test_stopping_does_not_wait_for_open_pages():
             await asyncio.wait_for(until_closed(), 2)
 
     asyncio.run(scenario())
+
+
+class SetupEngine(StubEngine):
+    def __init__(self):
+        super().__init__()
+        self.assigned = []
+
+    async def button_setup(self, name):
+        if name != "COMPACT":
+            raise ValueError(f"No FOH console called {name!r}")
+        return {"console": "COMPACT", "buttons": []}
+
+    async def assign_button(self, name, role, button, gpio):
+        if role not in ("gain", "phantom"):
+            raise ValueError("The role must be gain or phantom")
+        self.assigned.append((name, role, button.path, gpio))
+
+    async def clear_button(self, name, button):
+        self.assigned.append((name, "clear", button.path, None))
+
+
+def test_the_setup_endpoints():
+    async def scenario():
+        engine = SetupEngine()
+        server = WebServer(engine, port=0, host="127.0.0.1")
+        await server.start()
+        url = f"http://127.0.0.1:{server.port}"
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url + "/api/buttons/COMPACT") as response:
+                    assert (await response.json())["console"] == "COMPACT"
+                async with session.get(url + "/api/buttons/NOPE") as response:
+                    assert response.status == 400 and "NOPE" in (await response.json())["error"]
+                button = {"page": "U2", "number": 3, "row": "bu"}
+                async with session.post(url + "/api/buttons/COMPACT/assign", json={**button, "role": "phantom", "gpio": "d"}) as response:
+                    assert response.status == 200
+                async with session.post(url + "/api/buttons/COMPACT/assign", json={**button, "role": "phantom", "gpio": "E"}) as response:
+                    assert response.status == 400
+                async with session.post(url + "/api/buttons/COMPACT/clear", json=button) as response:
+                    assert response.status == 200
+            assert engine.assigned == [("COMPACT", "phantom", "$ctl.user.U2.3.bu", 4), ("COMPACT", "clear", "$ctl.user.U2.3.bu", None)]
+        finally:
+            await server.stop()
+
+    asyncio.run(scenario())
